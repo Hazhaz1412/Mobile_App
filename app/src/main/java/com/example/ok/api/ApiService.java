@@ -24,7 +24,8 @@ import com.example.ok.model.UserProfileResponse;
 public interface ApiService {
     @POST("api/auth/register")
     Call<ApiResponse> register(@Body RegisterRequest request);
-
+    @POST("api/auth/logout")
+    Call<ApiResponse> logout();
 
     // In ApiService.java interface
     @GET("api/users/{userId}/profile")

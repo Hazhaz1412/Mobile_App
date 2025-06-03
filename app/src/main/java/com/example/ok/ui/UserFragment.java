@@ -3,7 +3,9 @@ package com.example.ok.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -11,7 +13,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -25,12 +26,16 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.example.ok.Login;
+import com.example.ok.MainActivity;
 import com.example.ok.R;
 import com.example.ok.api.ApiService;
 import com.example.ok.api.RetrofitClient;
 import com.example.ok.model.ApiResponse;
 import com.example.ok.model.UserProfileRequest;
 import com.example.ok.model.UserProfileResponse;
+import com.example.ok.util.FileUtil;
+import com.example.ok.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -57,7 +62,7 @@ public class UserFragment extends Fragment {
     private ImageButton btnChangePhoto;
     private TextView tvDisplayName, tvBio, tvEmail, tvPhone, tvRatingCount;
     private RatingBar ratingBar;
-    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount;
+    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout;
     private View accountActionsCard;
 
     // API Service
@@ -133,6 +138,7 @@ public class UserFragment extends Fragment {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnDeactivateAccount = view.findViewById(R.id.btnDeactivateAccount);
         btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);
+        btnLogout = view.findViewById(R.id.btnLogout);
         accountActionsCard = view.findViewById(R.id.accountActionsCard);
 
         // Update UI based on whether viewing own profile or other user's profile
@@ -145,11 +151,17 @@ public class UserFragment extends Fragment {
             btnChangePhoto.setVisibility(View.VISIBLE);
             btnEditProfile.setVisibility(View.VISIBLE);
             accountActionsCard.setVisibility(View.VISIBLE);
+            if (btnLogout != null) {
+                btnLogout.setVisibility(View.VISIBLE);
+            }
         } else {
             // Viewing someone else's profile
             btnChangePhoto.setVisibility(View.GONE);
             btnEditProfile.setVisibility(View.GONE);
             accountActionsCard.setVisibility(View.GONE);
+            if (btnLogout != null) {
+                btnLogout.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -168,6 +180,72 @@ public class UserFragment extends Fragment {
         if (btnDeleteAccount != null) {
             btnDeleteAccount.setOnClickListener(v -> showDeleteConfirmation());
         }
+
+        // Logout button
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> showLogoutConfirmation());
+        }
+    }
+
+    private void showLogoutConfirmation() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Đăng xuất")
+                .setMessage("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?")
+                .setPositiveButton("Đăng xuất", (dialog, which) -> logoutUser())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void logoutUser() {
+        // Hiển thị dialog tiến trình
+        ProgressDialog progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setMessage("Đang đăng xuất...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        // 1. Gọi API đăng xuất (nếu có)
+        Call<ApiResponse> call = apiService.logout();
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                // Xử lý khi đã nhận phản hồi từ server (thành công hoặc thất bại)
+                clearLocalData();
+                progressDialog.dismiss();
+                navigateToLogin();
+                Toast.makeText(requireContext(), "Đăng xuất thành công", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                // Vẫn đăng xuất khỏi ứng dụng ngay cả khi API thất bại
+                Log.e(TAG, "Logout API call failed", t);
+                clearLocalData();
+                progressDialog.dismiss();
+                navigateToLogin();
+                Toast.makeText(requireContext(), "Đăng xuất thành công", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void clearLocalData() {
+        // Xóa token và dữ liệu người dùng từ SharedPreferences
+        SharedPreferences preferences = requireActivity().getSharedPreferences(
+                "user_prefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.clear();  // Xóa tất cả dữ liệu
+        editor.apply();
+
+        // Xóa các biến session khác (nếu có)
+        SessionManager sessionManager = new SessionManager(requireContext());
+        sessionManager.clearSession();
+    }
+
+    private void navigateToLogin() {
+        // Chuyển đến LoginActivity
+        Intent intent = new Intent(requireActivity(), Login.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 
     private void loadUserProfile() {
@@ -251,39 +329,48 @@ public class UserFragment extends Fragment {
 
     private void uploadProfileImage(Uri imageUri) {
         try {
-            // Show progress
+            // Hiển thị tiến trình
             ProgressDialog progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage("Đang tải ảnh lên...");
             progressDialog.setCancelable(false);
             progressDialog.show();
 
-            // Get file path from URI
-            String filePath = getRealPathFromURI(imageUri);
-            if (filePath == null) {
+            Log.d(TAG, "Uploading image from URI: " + imageUri.toString());
+
+            // Sử dụng FileUtil thay vì getRealPathFromURI
+            File file = FileUtil.getFileFromUri(requireContext(), imageUri);
+
+            if (file == null) {
                 progressDialog.dismiss();
                 Toast.makeText(requireContext(), "Không thể xử lý ảnh này", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Create file and request body
-            File file = new File(filePath);
+            Log.d(TAG, "Created file: " + file.getAbsolutePath() + ", size: " + file.length());
+
+            // Tạo request body
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
             MultipartBody.Part imagePart = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
 
-            // Make API call
+            // Gọi API
             Call<ApiResponse> call = apiService.uploadProfileImage(userId, imagePart);
             call.enqueue(new Callback<ApiResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                     progressDialog.dismiss();
 
+                    Log.d(TAG, "Upload response code: " + response.code());
+
                     if (response.isSuccessful() && response.body() != null) {
                         ApiResponse apiResponse = response.body();
                         if (apiResponse.isSuccess()) {
-                            // Update image in UI
+                            // Cập nhật UI với URL mới
                             String imageUrl = (String) apiResponse.getData();
+                            Log.d(TAG, "Upload successful, new image URL: " + imageUrl);
+
                             Glide.with(requireContext())
                                     .load(imageUrl)
+                                    .placeholder(R.drawable.user)
                                     .circleCrop()
                                     .into(profileImage);
 
@@ -291,11 +378,20 @@ public class UserFragment extends Fragment {
                                     "Cập nhật ảnh đại diện thành công",
                                     Toast.LENGTH_SHORT).show();
                         } else {
+                            Log.e(TAG, "Upload failed: " + apiResponse.getMessage());
                             Toast.makeText(requireContext(),
                                     apiResponse.getMessage(),
                                     Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        try {
+                            String errorBody = response.errorBody() != null ?
+                                    response.errorBody().string() : "Unknown error";
+                            Log.e(TAG, "Error response: " + errorBody);
+                        } catch (IOException e) {
+                            Log.e(TAG, "Could not read error body", e);
+                        }
+
                         Toast.makeText(requireContext(),
                                 "Lỗi: " + response.code(),
                                 Toast.LENGTH_SHORT).show();
@@ -305,33 +401,19 @@ public class UserFragment extends Fragment {
                 @Override
                 public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
                     progressDialog.dismiss();
+                    Log.e(TAG, "Network error during upload", t);
                     Toast.makeText(requireContext(),
                             "Lỗi kết nối: " + t.getMessage(),
                             Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Error uploading image", t);
                 }
             });
 
         } catch (Exception e) {
-            Toast.makeText(requireContext(),
-                    "Lỗi: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
             Log.e(TAG, "Error processing image", e);
+            Toast.makeText(requireContext(),
+                    "Lỗi xử lý ảnh: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private String getRealPathFromURI(Uri contentUri) {
-        String[] proj = {MediaStore.Images.Media.DATA};
-        android.database.Cursor cursor = requireContext().getContentResolver().query(contentUri, proj, null, null, null);
-
-        if (cursor == null) return null;
-
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String path = cursor.getString(column_index);
-        cursor.close();
-
-        return path;
     }
 
     private void showEditProfileDialog() {
@@ -521,15 +603,5 @@ public class UserFragment extends Fragment {
                 Log.e(TAG, "Error deleting account", t);
             }
         });
-    }
-
-    private void logoutUser() {
-        // Clear user session
-        // Replace this with your actual logout logic
-        Toast.makeText(requireContext(), "Đăng xuất...", Toast.LENGTH_SHORT).show();
-
-        // Navigate to login screen
-        // Replace with your app's navigation logic
-        requireActivity().finish();
     }
 }

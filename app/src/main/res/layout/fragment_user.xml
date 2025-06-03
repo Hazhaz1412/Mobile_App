@@ -236,6 +236,17 @@
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLogout"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Đăng xuất"
+                        android:textColor="@color/black"
+                        app:icon="@drawable/logout"
+                        app:iconTint="@color/black"
+                        app:strokeColor="@color/black" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnDeactivateAccount"
