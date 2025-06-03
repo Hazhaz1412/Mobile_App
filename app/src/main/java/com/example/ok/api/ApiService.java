@@ -32,9 +32,8 @@ public interface ApiService {
     Call<UserProfileResponse> getUserProfile(@Path("userId") Long userId);
 
     @Multipart
-    @POST("api/profiles/{userId}/image")
+    @POST("api/users/{userId}/profile-image")
     Call<ApiResponse> uploadProfileImage(@Path("userId") Long userId, @Part MultipartBody.Part image);
-
     @PUT("api/users/{userId}/profile")
     Call<ApiResponse> updateUserProfile(@Path("userId") Long userId, @Body UserProfileRequest request);
 

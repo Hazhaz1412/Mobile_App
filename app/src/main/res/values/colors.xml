@@ -5,4 +5,8 @@
     <color name="green1">#00C000</color>
     <color name="green2">#4BAB60</color>
     <color name="purple_500">#be2ed6</color>
+    <color name="accent_color">#386CB0</color>
+    <color name="hint_text_color">#D7D2CB</color>
+    <color name="price_color">#FAAA06</color>"
+
 </resources>

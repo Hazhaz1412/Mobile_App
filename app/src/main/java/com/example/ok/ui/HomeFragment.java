@@ -1,66 +1,78 @@
 package com.example.ok.ui;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.ok.R;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link HomeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class HomeFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.List;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+public class HomeFragment<BannerItem> extends Fragment {
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private ViewPager2 bannerViewPager;
+    private androidx.recyclerview.widget.RecyclerView categoriesRecyclerView;
+    private androidx.recyclerview.widget.RecyclerView featuredItemsRecyclerView;
+    private androidx.recyclerview.widget.RecyclerView recentItemsRecyclerView;
+    private FloatingActionButton fabAddItem;
 
     public HomeFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment HomeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static HomeFragment newInstance(String param1, String param2) {
-        HomeFragment fragment = new HomeFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Initialize views
+        bannerViewPager = view.findViewById(R.id.bannerViewPager);
+        categoriesRecyclerView = view.findViewById(R.id.categoriesRecyclerView);
+        featuredItemsRecyclerView = view.findViewById(R.id.featuredItemsRecyclerView);
+        recentItemsRecyclerView = view.findViewById(R.id.recentItemsRecyclerView);
+        fabAddItem = view.findViewById(R.id.fabAddItem);
+
+        // Search bar click listener
+        view.findViewById(R.id.searchBar).setOnClickListener(v -> {
+            // Chuyển đến màn hình tìm kiếm
+            Toast.makeText(requireContext(), "Tìm kiếm", Toast.LENGTH_SHORT).show();
+        });
+
+        // FAB click listener
+        fabAddItem.setOnClickListener(v -> {
+            // Mở màn hình đăng tin mới
+            Toast.makeText(requireContext(), "Thêm tin đăng mới", Toast.LENGTH_SHORT).show();
+        });
+
+        // Set up see all buttons
+        setupSeeAllButtons(view);
+    }
+
+    private void setupSeeAllButtons(View view) {
+        view.findViewById(R.id.tvSeeAllFeatured).setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Xem tất cả sản phẩm nổi bật", Toast.LENGTH_SHORT).show();
+        });
+
+        view.findViewById(R.id.tvSeeAllRecent).setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Xem tất cả sản phẩm gần đây", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+
 }
