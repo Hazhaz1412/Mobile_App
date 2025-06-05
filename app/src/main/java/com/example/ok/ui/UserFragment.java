@@ -32,6 +32,7 @@ import com.example.ok.R;
 import com.example.ok.api.ApiService;
 import com.example.ok.api.RetrofitClient;
 import com.example.ok.model.ApiResponse;
+import com.example.ok.model.User;
 import com.example.ok.model.UserProfileRequest;
 import com.example.ok.model.UserProfileResponse;
 import com.example.ok.util.FileUtil;
@@ -230,9 +231,9 @@ public class UserFragment extends Fragment {
     private void clearLocalData() {
         // Xóa token và dữ liệu người dùng từ SharedPreferences
         SharedPreferences preferences = requireActivity().getSharedPreferences(
-                "user_prefs", Context.MODE_PRIVATE);
+                "UserPrefs", Context.MODE_PRIVATE); // Sửa từ "user_prefs" thành "UserPrefs"
         SharedPreferences.Editor editor = preferences.edit();
-        editor.clear();  // Xóa tất cả dữ liệu
+        editor.clear();
         editor.apply();
 
         // Xóa các biến session khác (nếu có)
@@ -261,7 +262,16 @@ public class UserFragment extends Fragment {
                 progressDialog.dismiss();
 
                 if (response.isSuccessful() && response.body() != null) {
-                    updateUI(response.body());
+                    UserProfileResponse userResponse = response.body();
+                    
+                    // Mặc định là thành công nếu response có HTTP 200
+                    userResponse.setSuccess(true);
+                    
+                    Log.d(TAG, "Loaded profile data: " + 
+                          userResponse.getDisplayName() + ", " + 
+                          userResponse.getProfilePictureUrl());
+                    
+                    updateUI(userResponse);
                 } else {
                     Toast.makeText(requireContext(),
                             "Lỗi khi tải thông tin: " + response.code(),
@@ -280,45 +290,61 @@ public class UserFragment extends Fragment {
         });
     }
 
-    private void updateUI(UserProfileResponse profile) {
-        // Set user name
-        tvDisplayName.setText(profile.getDisplayName());
+    private void updateUI(UserProfileResponse response) {
+        try {
+            if (response == null || !response.isSuccess()) {
+                Toast.makeText(requireContext(), "Không thể tải thông tin người dùng", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // Set bio
-        if (profile.getBio() != null && !profile.getBio().isEmpty()) {
-            tvBio.setText(profile.getBio());
-        } else {
-            tvBio.setText("Chưa có thông tin giới thiệu");
-        }
+            // Lấy dữ liệu user từ response
+            User user = response.getData();
+            if (user == null) {
+                Log.e(TAG, "User data is null in response");
+                Toast.makeText(requireContext(), "Dữ liệu người dùng trống", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // Set contact info
-        tvEmail.setText(profile.getEmail());
-        if (profile.getContactInfo() != null && !profile.getContactInfo().isEmpty()) {
-            tvPhone.setText(profile.getContactInfo());
-        } else {
-            tvPhone.setText("Chưa cập nhật");
-        }
+            // Log để debug
+            Log.d(TAG, "User data loaded: " + user.getDisplayName() + ", avatar: " + user.getAvatarUrl());
 
-        // Set rating
-        if (profile.getRatingAvg() != null) {
-            ratingBar.setRating(profile.getRatingAvg().floatValue());
-            tvRatingCount.setText(String.format("%.1f (%d đánh giá)",
-                    profile.getRatingAvg(), profile.getRatingCount()));
-        } else {
-            ratingBar.setRating(0);
-            tvRatingCount.setText("Chưa có đánh giá");
-        }
+            // Hiển thị thông tin cơ bản
+            tvDisplayName.setText(user.getDisplayName());
+            tvEmail.setText(user.getEmail());
 
-        // Load profile image
-        if (profile.getProfilePictureUrl() != null && !profile.getProfilePictureUrl().isEmpty()) {
-            Glide.with(requireContext())
-                    .load(profile.getProfilePictureUrl())
-                    .placeholder(R.drawable.user)
-                    .error(R.drawable.user)
-                    .circleCrop()
-                    .into(profileImage);
-        } else {
-            profileImage.setImageResource(R.drawable.user);
+            // Hiển thị thông tin bio và contact nếu có
+            if (user.getBio() != null && !user.getBio().isEmpty()) {
+                tvBio.setText(user.getBio());
+            } else {
+                tvBio.setText("Chưa có thông tin giới thiệu");
+            }
+
+            if (user.getContactInfo() != null && !user.getContactInfo().isEmpty()) {
+                tvPhone.setText(user.getContactInfo());
+            } else {
+                tvPhone.setText("Chưa có thông tin liên hệ");
+            }
+
+            // Hiển thị avatar
+            String avatarUrl = user.getAvatarUrl();
+            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                // Lưu URL avatar vào SharedPreferences để sử dụng ở nơi khác
+                SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+                prefs.edit().putString("avatarUrl", avatarUrl).apply();
+
+                // Hiển thị avatar với Glide
+                Glide.with(this)
+                        .load(avatarUrl)
+                        .placeholder(R.drawable.user)
+                        .error(R.drawable.user)
+                        .circleCrop()
+                        .into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.user);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating UI with user data", e);
+            Toast.makeText(requireContext(), "Lỗi hiển thị dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

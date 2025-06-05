@@ -32,11 +32,11 @@
         android:text="@string/facebook"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.285"
-        app:layout_constraintStart_toEndOf="@+id/button"
+        app:layout_constraintStart_toEndOf="@+id/ggregis"
         app:layout_constraintTop_toBottomOf="@+id/optionLogin4" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button"
+        android:id="@+id/ggregis"
         android:layout_width="157dp"
         android:layout_height="53dp"
         android:layout_marginStart="24dp"

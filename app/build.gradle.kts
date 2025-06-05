@@ -50,6 +50,10 @@ dependencies {
     implementation(libs.play.services.base)
     implementation(libs.circleimageview)
     implementation(libs.glide)
+    implementation(libs.swiperefreshlayout)
+    implementation(libs.flexbox)
+    implementation(libs.viewpager2)
+    implementation(libs.navigation.runtime.android)
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
 

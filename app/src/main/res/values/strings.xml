@@ -38,4 +38,15 @@
     <string name="exbio">Bio mẫu</string>
     <string name="exnum">+84 0123456789</string>
     <string name="Welcome">Chào mừng</string>
+    <string name="h_y_t_o_tin_ng_u_ti_n_c_a_b_n">Hãy tạo tin đăng đầu tiên của bạn</string>
+    <string name="ch_a_c_tin_ng_n_o">Chưa có tin đăng nào</string>
+    <string name="t_o_tin_ng">Tạo tin đăng</string>
+    <string name="b_n">Đã bán</string>
+    <string name="_0">0</string>
+    <string name="l_t_xem">Lượt xem</string>
+    <string name="s_ch_nv_n_ph_n"><![CDATA[Sách &\nVăn phòn...]]></string>
+    <string name="svp">Sách, VPP</string>
+    <string name="t_m_ki_m">Tìm kiếm</string>
+    <string name="i_n_t">Điện tử</string>
+    <string name="t_m_ki_m_s_n_ph_m_d_ch_v">Tìm kiếm sản phẩm, dịch vụ...</string>
 </resources>

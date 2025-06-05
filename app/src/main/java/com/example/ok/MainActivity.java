@@ -9,11 +9,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+
 import android.widget.TextView;
 import android.widget.Button;
 import android.view.View;
 import android.widget.Toast;
 import android.widget.ImageView;
+
+import com.example.ok.ui.CreateListingFragment;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -56,4 +60,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void replaceFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
 }

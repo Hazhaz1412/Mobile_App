@@ -79,7 +79,7 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@drawable/customwhitebutton"
-                    android:drawableTop="@drawable/cart2"
+                    android:drawableTop="@drawable/note"
                     android:text=""
                     android:padding="8dp"
                     android:gravity="center" />
@@ -87,38 +87,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Giỏ hàng"
+                    android:text="Bài đăng"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:gravity="center" />
             </LinearLayout>
 
-            <!-- Button: Tìm kiếm -->
-            <LinearLayout
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginEnd="16dp">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnFind"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:background="@drawable/customwhitebutton"
-                    android:drawableTop="@drawable/find"
-                    android:text=""
-                    android:padding="8dp"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tìm kiếm"
-                    android:textSize="12sp"
-                    android:textColor="#000000"
-                    android:gravity="center" />
-            </LinearLayout>
 
             <!-- Button: Chat -->
             <LinearLayout
@@ -146,6 +121,7 @@
                     android:textColor="#000000"
                     android:gravity="center" />
             </LinearLayout>
+
 
             <!-- Button: Tài khoản -->
             <LinearLayout

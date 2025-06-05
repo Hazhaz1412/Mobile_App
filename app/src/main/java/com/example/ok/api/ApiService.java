@@ -2,6 +2,9 @@
 package com.example.ok.api;
 
 import com.example.ok.model.ApiResponse;
+import com.example.ok.model.CreateListingRequest;
+import com.example.ok.model.Listing;
+import com.example.ok.model.PagedApiResponse;
 import com.example.ok.model.RegisterRequest;
 import com.example.ok.model.LoginRequest;
 import com.example.ok.model.GoogleAuthRequest;
@@ -18,9 +21,13 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
+
+import com.example.ok.model.UpdateListingRequest;
 import com.example.ok.model.UserProfileRequest;
 import com.example.ok.model.UserProfileResponse;
 
+import java.util.List;
 public interface ApiService {
     @POST("api/auth/register")
     Call<ApiResponse> register(@Body RegisterRequest request);
@@ -57,4 +64,78 @@ public interface ApiService {
     Call<ApiResponse> login(@Body LoginRequest request);
     @POST("api/auth/activate/{userId}")
     Call<ApiResponse> activateUser(@Path("userId") Long userId);
+
+
+
+    // Listing endpoints
+    @POST("api/listings")
+    Call<ApiResponse> createListing(
+            @Query("userId") Long userId,
+            @Body CreateListingRequest request
+    );
+
+    @Multipart
+    @POST("api/listings/{listingId}/images")
+    Call<ApiResponse> uploadImages(
+            @Path("listingId") Long listingId,
+            @Query("userId") Long userId,
+            @Part List<MultipartBody.Part> images
+    );
+
+    @PUT("api/listings/{listingId}")
+    Call<ApiResponse> updateListing(
+            @Path("listingId") Long listingId,
+            @Query("userId") Long userId,
+            @Body UpdateListingRequest request
+    );
+
+    @DELETE("api/listings/{listingId}")
+    Call<ApiResponse> deleteListing(
+            @Path("listingId") Long listingId,
+            @Query("userId") Long userId
+    );
+
+    @GET("api/listings/user/{userId}")
+    Call<PagedApiResponse<Listing>> getUserListings(
+            @Path("userId") Long userId,
+            @Query("status") String status,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("api/listings")
+    Call<PagedApiResponse<Listing>> getAvailableListings(
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("api/listings/category/{categoryId}")
+    Call<PagedApiResponse<Listing>> getListingsByCategory(
+            @Path("categoryId") Long categoryId,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("api/listings/search")
+    Call<PagedApiResponse<Listing>> searchListings(
+            @Query("keyword") String keyword,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("api/listings/{listingId}")
+    Call<ApiResponse> getListingDetail(
+            @Path("listingId") Long listingId
+    );
+
+    @POST("api/listings/{listingId}/interact")
+    Call<ApiResponse> incrementInteraction(
+            @Path("listingId") Long listingId
+    );
+
+    @GET("api/listings/categories")
+    Call<ApiResponse> getAllCategories();
+
+    @GET("api/listings/conditions")
+    Call<ApiResponse> getAllConditions();
 }
