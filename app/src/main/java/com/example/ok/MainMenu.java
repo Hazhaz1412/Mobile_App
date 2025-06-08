@@ -128,23 +128,40 @@ public class MainMenu extends AppCompatActivity {
     }
 
     public void navigateToTab(String tabName) {
+        Fragment fragment = null;
+        AppCompatButton button = null;
+
         switch (tabName.toLowerCase()) {
             case "home":
-            case "dashboard":
-                btnDashboard.performClick();
+                fragment = new HomeFragment();
+                button = btnDashboard;
                 break;
-            case "cart":
-                btnCart.performClick();
+            case "search":
+                fragment = new SearchFragment();
+                button = null; // Search không thuộc bottom menu
                 break;
-            case "chat":
-            case "messages":
-                btnChat.performClick();
+            case "mylistings":
+                fragment = new MyListingsFragment();
+                button = btnCart;
                 break;
-
             case "user":
-            case "profile":
-                btnUser.performClick();
+                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                long userId = prefs.getLong("userId", 0L);
+                if (userId > 0) {
+                    fragment = UserFragment.newInstance(userId, true);
+                    button = btnUser;
+                } else {
+                    Toast.makeText(this, "Bạn cần đăng nhập để xem hồ sơ", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 break;
+        }
+
+        if (fragment != null) {
+            loadFragment(fragment);
+            if (button != null) {
+                setSelectedButton(button);
+            }
         }
     }
 
