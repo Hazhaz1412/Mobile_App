@@ -75,6 +75,9 @@ public class SearchFragment extends Fragment {
     private boolean isLoading = false;
     private boolean isLastPage = false;
     
+    private android.os.Handler searchHandler = new android.os.Handler();
+    private Runnable searchRunnable;
+    
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -170,17 +173,22 @@ public class SearchFragment extends Fragment {
             }
             return false;
         });
-        
+
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            
+
             @Override
             public void afterTextChanged(Editable s) {
-                currentQuery = s.toString().trim();
+                // Loại bỏ ký tự xuống dòng, tab, khoảng trắng thừa
+                currentQuery = s.toString().replaceAll("[\\n\\r\\t]", "").trim();
+                // Debounce: trigger search 200ms after user stops typing
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> performSearch();
+                searchHandler.postDelayed(searchRunnable, 200);
             }
         });
         
@@ -234,57 +242,58 @@ public class SearchFragment extends Fragment {
                     
                     if (pagedResponse.isSuccess()) {
                         List<Listing> listings = pagedResponse.getData();
-                        
+
                         if (listings != null && !listings.isEmpty()) {
                             // Thêm lọc client-side
-                            if (selectedCategoryId != null || minPrice != null || maxPrice != null || selectedLocation != null) {
-                                List<Listing> filteredListings = new ArrayList<>();
-                                
-                                for (Listing listing : listings) {
-                                    boolean match = true;
-                                    
-                                    // Lọc theo category
-                                    if (selectedCategoryId != null && !selectedCategoryId.equals(listing.getCategoryId())) {
+                            List<Listing> filteredListings = new ArrayList<>();
+                            for (Listing listing : listings) {
+                                boolean match = true;
+
+                                // Lọc theo category
+                                if (selectedCategoryId != null && !selectedCategoryId.equals(listing.getCategoryId())) {
+                                    match = false;
+                                }
+
+                                // Lọc theo giá
+                                if (match && minPrice != null && listing.getPrice().doubleValue() < minPrice) {
+                                    match = false;
+                                }
+                                if (match && maxPrice != null && listing.getPrice().doubleValue() > maxPrice) {
+                                    match = false;
+                                }
+
+                                // Lọc theo địa điểm
+                                if (match && selectedLocation != null && !listing.getLocationText().contains(selectedLocation)) {
+                                    match = false;
+                                }
+
+                                // Lọc theo keyword (tên/mô tả)
+                                if (match && currentQuery != null && !currentQuery.isEmpty()) {
+                                    String keyword = currentQuery.toLowerCase();
+                                    String title = listing.getTitle() != null ? listing.getTitle().toLowerCase() : "";
+                                    String description = listing.getDescription() != null ? listing.getDescription().toLowerCase() : "";
+                                    if (!title.contains(keyword) && !description.contains(keyword)) {
                                         match = false;
-                                    }
-                                    
-                                    // Lọc theo giá
-                                    if (match && minPrice != null && listing.getPrice().doubleValue() < minPrice) {
-                                        match = false;
-                                    }
-                                    
-                                    if (match && maxPrice != null && listing.getPrice().doubleValue() > maxPrice) {
-                                        match = false;
-                                    }
-                                    
-                                    // Lọc theo địa điểm
-                                    if (match && selectedLocation != null && !listing.getLocationText().contains(selectedLocation)) {
-                                        match = false;
-                                    }
-                                    
-                                    if (match) {
-                                        filteredListings.add(listing);
                                     }
                                 }
-                                
-                                // Hiển thị danh sách đã lọc
-                                adapter.setListings(filteredListings);
-                                Toast.makeText(getContext(), "Tìm thấy " + filteredListings.size() + " kết quả", Toast.LENGTH_SHORT).show();
-                                
-                                if (filteredListings.isEmpty()) {
-                                    showEmptyView();
-                                } else {
-                                    showContentView();
+
+                                if (match) {
+                                    filteredListings.add(listing);
                                 }
+                            }
+
+                            // Hiển thị danh sách đã lọc
+                            adapter.setListings(filteredListings);
+                            Toast.makeText(getContext(), "Tìm thấy " + filteredListings.size() + " kết quả", Toast.LENGTH_SHORT).show();
+
+                            if (filteredListings.isEmpty()) {
+                                showEmptyView();
                             } else {
-                                // Không có bộ lọc, hiển thị tất cả kết quả
-                                adapter.setListings(listings);
-                                Toast.makeText(getContext(), "Tìm thấy " + listings.size() + " kết quả", Toast.LENGTH_SHORT).show();
                                 showContentView();
                             }
-                            
+
                             // Check if this is the last page
-                            if (listings.size() < PAGE_SIZE) {
+                            if (filteredListings.size() < PAGE_SIZE) {
                                 isLastPage = true;
                             }
                         } else {
@@ -884,5 +893,51 @@ public class SearchFragment extends Fragment {
                 });
             }
         }
+    }
+    
+    // Gợi ý sản phẩm theo danh mục
+    private List<Listing> getRecommendedByCategory(Long categoryId, List<Listing> allListings, int maxCount) {
+        List<Listing> result = new ArrayList<>();
+        for (Listing l : allListings) {
+            if (l.getCategoryId() != null && l.getCategoryId().equals(categoryId)) {
+                result.add(l);
+                if (result.size() >= maxCount) break;
+            }
+        }
+        return result;
+    }
+
+    // Gợi ý sản phẩm phổ biến (viewCount cao)
+    private List<Listing> getRecommendedByPopularity(List<Listing> allListings, int maxCount) {
+        List<Listing> sorted = new ArrayList<>(allListings);
+        sorted.sort((a, b) -> Integer.compare(b.getViewCount(), a.getViewCount()));
+        return sorted.subList(0, Math.min(maxCount, sorted.size()));
+    }
+
+    // Gợi ý sản phẩm gần vị trí user (giả lập, lọc theo locationText)
+    private List<Listing> getRecommendedByLocation(String userLocation, List<Listing> allListings, int maxCount) {
+        List<Listing> result = new ArrayList<>();
+        for (Listing l : allListings) {
+            if (l.getLocationText() != null && l.getLocationText().contains(userLocation)) {
+                result.add(l);
+                if (result.size() >= maxCount) break;
+            }
+        }
+        return result;
+    }
+
+    // Gợi ý theo lịch sử xem (giả lập, lấy từ SharedPreferences)
+    private List<Listing> getRecommendedByHistory(List<Listing> allListings, List<Long> historyIds, int maxCount) {
+        List<Listing> result = new ArrayList<>();
+        for (Long id : historyIds) {
+            for (Listing l : allListings) {
+                if (l.getId() == id) {
+                    result.add(l);
+                    break;
+                }
+            }
+            if (result.size() >= maxCount) break;
+        }
+        return result;
     }
 }
