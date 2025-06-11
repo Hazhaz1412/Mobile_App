@@ -286,7 +286,7 @@
                         android:id="@+id/ivSellerAvatar"
                         android:layout_width="56dp"
                         android:layout_height="56dp"
-                        android:src="@drawable/user"
+                        android:src="@drawable/ic_user"
                         android:layout_marginEnd="16dp" />
 
                     <LinearLayout
@@ -375,6 +375,19 @@
             android:drawablePadding="8dp"
             android:backgroundTint="@color/primary_color"
             android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/btnBuy"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Mua ngay"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/primary_color"
+            android:drawableStart="@android:drawable/ic_menu_send"
+            android:drawablePadding="8dp" />
 
         <Button
             android:id="@+id/btnFavorite"

@@ -2,6 +2,7 @@ package com.example.ok.model;
 
 import com.google.gson.annotations.SerializedName;
 import java.math.BigDecimal;
+import java.util.Date;
 
 public class UserProfileResponse {
     private boolean success;
@@ -35,19 +36,24 @@ public class UserProfileResponse {
     
     // Constructor
     public UserProfileResponse() {}
-    
-    // Getters
+      // Getters
     public boolean isSuccess() {
+        // Consider the response successful if direct user data fields are populated
+        // even if the success flag is not explicitly set
+        if (!success) {
+            if (userId != null || displayName != null || email != null) {
+                return true;
+            }
+        }
         return success;
     }
     
     public String getMessage() {
         return message;
     }
-    
-    public User getData() {
+      public User getData() {
         // Nếu data null, tạo User từ trường trực tiếp
-        if (data == null) {
+        if (data == null && (userId != null || displayName != null || email != null)) {
             data = new User();
             data.setId(userId);
             data.setDisplayName(displayName);
@@ -55,7 +61,10 @@ public class UserProfileResponse {
             data.setBio(bio);
             data.setContactInfo(contactInfo);
             data.setAvatarUrl(profilePictureUrl);
-            // Set các trường khác nếu cần
+            // Đặt các giá trị mặc định cho các trường khác
+            if (data.getCreatedAt() == null) {
+                data.setCreatedAt(new Date()); // Sử dụng ngày hiện tại nếu không có ngày tạo
+            }
         }
         return data;
     }

@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.example.ok.Login;
 import com.example.ok.MainActivity;
+import com.example.ok.MainMenu;
 import com.example.ok.R;
 import com.example.ok.api.ApiService;
 import com.example.ok.api.RetrofitClient;
@@ -63,7 +64,7 @@ public class UserFragment extends Fragment {
     private ImageButton btnChangePhoto;
     private TextView tvDisplayName, tvBio, tvEmail, tvPhone, tvRatingCount;
     private RatingBar ratingBar;
-    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout;
+    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout, btnNotificationSettings;
     private View accountActionsCard;
 
     // API Service
@@ -94,6 +95,7 @@ public class UserFragment extends Fragment {
         }
 
         // Initialize API service
+        RetrofitClient.init(requireContext());
         apiService = RetrofitClient.getApiService();
 
         // Initialize image picker launcher
@@ -140,6 +142,7 @@ public class UserFragment extends Fragment {
         btnDeactivateAccount = view.findViewById(R.id.btnDeactivateAccount);
         btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);
         btnLogout = view.findViewById(R.id.btnLogout);
+        btnNotificationSettings = view.findViewById(R.id.btnNotificationSettings);
         accountActionsCard = view.findViewById(R.id.accountActionsCard);
 
         // Update UI based on whether viewing own profile or other user's profile
@@ -155,6 +158,9 @@ public class UserFragment extends Fragment {
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.VISIBLE);
             }
+            if (btnNotificationSettings != null) {
+                btnNotificationSettings.setVisibility(View.VISIBLE);
+            }
         } else {
             // Viewing someone else's profile
             btnChangePhoto.setVisibility(View.GONE);
@@ -162,6 +168,9 @@ public class UserFragment extends Fragment {
             accountActionsCard.setVisibility(View.GONE);
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.GONE);
+            }
+            if (btnNotificationSettings != null) {
+                btnNotificationSettings.setVisibility(View.GONE);
             }
         }
     }
@@ -185,6 +194,17 @@ public class UserFragment extends Fragment {
         // Logout button
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutConfirmation());
+        }
+        
+        // Notification settings button
+        if (btnNotificationSettings != null) {
+            btnNotificationSettings.setOnClickListener(v -> navigateToNotificationSettings());
+        }
+    }
+
+    private void navigateToNotificationSettings() {
+        if (getActivity() instanceof MainMenu) {
+            ((MainMenu) getActivity()).navigateToNotificationSettings();
         }
     }
 

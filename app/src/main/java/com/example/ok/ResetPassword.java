@@ -59,6 +59,8 @@ public class ResetPassword extends AppCompatActivity {
         btnResetPassword = findViewById(R.id.btnResetPassword);
         tvBackToLogin = findViewById(R.id.tvBackToLogin);
 
+        // Initialize RetrofitClient before using API services
+        RetrofitClient.init(this);
         apiService = RetrofitClient.getApiService();
 
         Uri data = getIntent().getData();

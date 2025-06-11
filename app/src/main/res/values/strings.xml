@@ -45,8 +45,8 @@
     <string name="_0">0</string>
     <string name="l_t_xem">Lượt xem</string>
     <string name="s_ch_nv_n_ph_n"><![CDATA[Sách &\nVăn phòn...]]></string>
-    <string name="svp">Sách, VPP</string>
-    <string name="t_m_ki_m">Tìm kiếm</string>
-    <string name="i_n_t">Điện tử</string>
-    <string name="t_m_ki_m_s_n_ph_m_d_ch_v">Tìm kiếm sản phẩm, dịch vụ...</string>
+    <string name="svp">Sách, VPP</string>    <string name="t_m_ki_m">Tìm kiếm</string>
+    <string name="i_n_t">Điện tử</string>    <string name="t_m_ki_m_s_n_ph_m_d_ch_v">Tìm kiếm sản phẩm, dịch vụ...</string>    <string name="no_messages_yet">Chưa có tin nhắn nào</string>
+    <string name="unread_messages">%d tin nhắn chưa đọc</string>
+    <string name="image_message_notification_text">📷 Hình ảnh</string>
 </resources>

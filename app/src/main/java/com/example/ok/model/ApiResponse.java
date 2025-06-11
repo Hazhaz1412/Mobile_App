@@ -1,6 +1,12 @@
 // filepath: com.example.ok.model.ApiResponse.java
 package com.example.ok.model;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.List;
+
 public class ApiResponse {
     private boolean success;
     private String message;
@@ -24,4 +30,21 @@ public class ApiResponse {
 
     public Object getData() { return data; }
     public void setData(Object data) { this.data = data; }
+    
+    // Convert data to a specific class
+    public <T> T getDataAs(Class<T> classOfT) {
+        if (data == null) return null;
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        return gson.fromJson(json, classOfT);
+    }
+    
+    // Convert data to a list of a specific class
+    public <T> List<T> getDataListAs(Class<T> classOfT) {
+        if (data == null) return null;
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        Type listType = TypeToken.getParameterized(List.class, classOfT).getType();
+        return gson.fromJson(json, listType);
+    }
 }

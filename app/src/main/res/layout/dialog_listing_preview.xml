@@ -245,7 +245,7 @@
                     android:id="@+id/ivSellerAvatar"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/user"
+                    android:src="@drawable/ic_user"
                     android:layout_marginEnd="12dp" />
 
                 <LinearLayout

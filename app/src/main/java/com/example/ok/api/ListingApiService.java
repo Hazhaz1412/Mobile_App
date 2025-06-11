@@ -91,4 +91,14 @@ public interface ListingApiService {
             @Query("page") int page,
             @Query("size") int size
     );
+
+    // Home recommendations: group by category
+    @GET("api/listings/home-recommendations")
+    Call<PagedApiResponse<CategoryWithListingsResponse>> getHomeRecommendations(
+        @Query("userId") Long userId,
+        @Query("lat") Double lat,
+        @Query("lng") Double lng,
+        @Query("page") int page,
+        @Query("size") int size
+    );
 }

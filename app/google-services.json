@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "275122292032",
+    "project_id": "ok-marketplace-app",
+    "storage_bucket": "ok-marketplace-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:275122292032:android:abc123def456",
+        "android_client_info": {
+          "package_name": "com.example.ok"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "275122292032-7ujrq4ubkofbhv1iuvm1jda3kvimh53s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ok",
+            "certificate_hash": "sha1_cert_fingerprint_here"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDemoKeyForDevelopment"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "275122292032-example.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

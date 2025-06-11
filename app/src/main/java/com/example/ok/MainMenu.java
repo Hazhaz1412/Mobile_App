@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.AppCompatButton;
 import com.example.ok.ui.*;
+import com.example.ok.util.NotificationChannelManager;
 
 public class MainMenu extends AppCompatActivity {
 
@@ -19,13 +20,22 @@ public class MainMenu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
 
+        // Create notification channels when MainMenu starts - critical for notifications
+        NotificationChannelManager.createNotificationChannels(this);
+
         initViews();
         setupClickListeners();
 
         // Load default fragment (Home)
         if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-            setSelectedButton(btnDashboard);
+            // Check if opened from notification
+            handleNotificationIntent();
+            
+            // Load default if not opened from notification
+            if (!handleNotificationIntent()) {
+                loadFragment(new HomeFragment());
+                setSelectedButton(btnDashboard);
+            }
         }
     }
 
@@ -70,8 +80,9 @@ public class MainMenu extends AppCompatActivity {
         // Thêm kiểm tra null cho btnChat
         if (btnChat != null) {
             btnChat.setOnClickListener(v -> {
-                Toast.makeText(this, "Tính năng chat đang phát triển", Toast.LENGTH_SHORT).show();
-                // Có thể bổ sung code điều hướng đến màn hình chat sau này
+                // Open chat inbox
+                loadFragment(new ChatInboxFragment());
+                setSelectedButton(btnChat);
             });
         }
 
@@ -163,6 +174,35 @@ public class MainMenu extends AppCompatActivity {
                 setSelectedButton(button);
             }
         }
+    }
+
+    public void navigateToNotificationSettings() {
+        NotificationSettingsFragment fragment = new NotificationSettingsFragment();
+        loadFragment(fragment);
+    }
+    
+    /**
+     * Handle intent from notification taps
+     */
+    private boolean handleNotificationIntent() {
+        if (getIntent() != null && getIntent().getBooleanExtra("openChat", false)) {
+            // Get chat parameters from intent
+            long roomId = getIntent().getLongExtra("roomId", -1);
+            long myId = getIntent().getLongExtra("myId", -1);
+            long otherId = getIntent().getLongExtra("otherId", -1);
+            String otherName = getIntent().getStringExtra("otherName");
+            
+            if (roomId != -1 && myId != -1 && otherId != -1) {
+                // Open the specific chat
+                ChatFragment chatFragment = ChatFragment.newInstance(roomId, myId, otherId, otherName);
+                loadFragment(chatFragment);
+                setSelectedButton(btnChat);
+                
+                Log.d("MainMenu", "Opened chat from notification: roomId=" + roomId);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

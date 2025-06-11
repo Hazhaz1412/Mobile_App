@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.example.ok.MainMenu;
 import com.example.ok.R;
 import com.example.ok.adapter.ListingAdapter;
+import com.example.ok.adapter.HomeRecommendationsAdapter;
 import com.example.ok.api.ApiService;
 import com.example.ok.api.ListingApiService;
 import com.example.ok.api.RetrofitClient;
@@ -39,6 +40,7 @@ public class HomeFragment extends Fragment {
     private ImageView ivUserAvatar;
     private MaterialCardView searchBar;
     private RecyclerView featuredItemsRecyclerView;
+    private RecyclerView recommendationsRecyclerView;
     private FloatingActionButton fabAddItem;
 
     // Category containers
@@ -50,6 +52,7 @@ public class HomeFragment extends Fragment {
 
     // Adapters
     private ListingAdapter featuredAdapter;
+    private HomeRecommendationsAdapter recommendationsAdapter;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -93,6 +96,7 @@ public class HomeFragment extends Fragment {
 
         // RecyclerView
         featuredItemsRecyclerView = view.findViewById(R.id.featuredItemsRecyclerView);
+        recommendationsRecyclerView = view.findViewById(R.id.recommendationsRecyclerView);
 
         // FAB
         fabAddItem = view.findViewById(R.id.fabAddItem);
@@ -144,6 +148,8 @@ public class HomeFragment extends Fragment {
 
     private void initApiServices() {
         try {
+            // Initialize RetrofitClient before using any API services
+            RetrofitClient.init(requireContext());
             apiService = RetrofitClient.getApiService();
             listingApiService = RetrofitClient.getListingApiService();
         } catch (Exception e) {
@@ -183,8 +189,27 @@ public class HomeFragment extends Fragment {
         featuredItemsRecyclerView.setAdapter(featuredAdapter);
         featuredItemsRecyclerView.setNestedScrollingEnabled(false);
 
+        // Recommendations adapter
+        recommendationsAdapter = new HomeRecommendationsAdapter(getContext());
+        recommendationsRecyclerView.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
+        recommendationsRecyclerView.setAdapter(recommendationsAdapter);
+        recommendationsRecyclerView.setNestedScrollingEnabled(false);
+
         // Set click listener for featured items
         featuredAdapter.setOnListingClickListener(new ListingAdapter.OnListingClickListener() {
+            @Override
+            public void onListingClick(Listing listing) {
+                navigateToListingDetail(listing);
+            }
+
+            @Override
+            public void onListingLongClick(Listing listing) {
+                showListingOptions(listing);
+            }
+        });
+
+        // Set click listener for recommendations
+        recommendationsAdapter.setOnListingClickListener(new ListingAdapter.OnListingClickListener() {
             @Override
             public void onListingClick(Listing listing) {
                 navigateToListingDetail(listing);
@@ -272,7 +297,47 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadData() {
+        loadHomeRecommendations();
         loadFeaturedListings();
+    }
+
+    private void loadHomeRecommendations() {
+        if (listingApiService == null) {
+            Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Lấy userId, lat, lng từ SharedPreferences hoặc null nếu chưa có
+        SharedPreferences prefs = getContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        Long userId = prefs.contains("userId") ? prefs.getLong("userId", 0) : null;
+        Double lat = prefs.contains("lat") ? Double.longBitsToDouble(prefs.getLong("lat", 0)) : null;
+        Double lng = prefs.contains("lng") ? Double.longBitsToDouble(prefs.getLong("lng", 0)) : null;
+        Call<PagedApiResponse<CategoryWithListingsResponse>> call = listingApiService.getHomeRecommendations(userId, lat, lng, 0, 10);
+        call.enqueue(new Callback<PagedApiResponse<CategoryWithListingsResponse>>() {
+            @Override
+            public void onResponse(Call<PagedApiResponse<CategoryWithListingsResponse>> call, Response<PagedApiResponse<CategoryWithListingsResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    PagedApiResponse<CategoryWithListingsResponse> pagedResponse = response.body();
+                    if (pagedResponse.isSuccess()) {
+                        List<CategoryWithListingsResponse> categories = pagedResponse.getData();
+                        if (categories != null && !categories.isEmpty()) {
+                            recommendationsAdapter.setCategories(categories);
+                        } else {
+                            // Show empty state for recommendations
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Không thể tải gợi ý: " + pagedResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Lỗi tải gợi ý: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PagedApiResponse<CategoryWithListingsResponse>> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối gợi ý: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadFeaturedListings() {
@@ -390,6 +455,9 @@ public class HomeFragment extends Fragment {
         // Clean up to prevent memory leaks
         if (featuredAdapter != null) {
             featuredAdapter.setOnListingClickListener(null);
+        }
+        if (recommendationsAdapter != null) {
+            recommendationsAdapter.setOnListingClickListener(null);
         }
     }
 }

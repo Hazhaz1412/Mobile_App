@@ -56,7 +56,7 @@ public class ListingDetailFragment extends Fragment {
     private CircleImageView ivSellerAvatar;
     private TextView tvSellerName, tvSellerJoinDate;
     private RatingBar rbSellerRating;
-    private Button btnContact, btnFavorite, btnShare, btnReport;
+    private Button btnContact, btnFavorite, btnShare, btnReport, btnBuy;
     private FloatingActionButton fabEdit;
     private LinearLayout layoutSellerInfo, layoutActions, layoutLoading;
     private ScrollView scrollViewContent;
@@ -114,6 +114,8 @@ public class ListingDetailFragment extends Fragment {
 
     private void initServices() {
         try {
+            // Initialize RetrofitClient before using any API services
+            RetrofitClient.init(requireContext());
             listingApiService = RetrofitClient.getListingApiService();
             apiService = RetrofitClient.getApiService();
         } catch (Exception e) {
@@ -158,6 +160,7 @@ public class ListingDetailFragment extends Fragment {
         btnFavorite = view.findViewById(R.id.btnFavorite);
         btnShare = view.findViewById(R.id.btnShare);
         btnReport = view.findViewById(R.id.btnReport);
+        btnBuy = view.findViewById(R.id.btnBuy);
         fabEdit = view.findViewById(R.id.fabEdit);
 
         // Back button
@@ -183,6 +186,9 @@ public class ListingDetailFragment extends Fragment {
 
         // View seller profile
         layoutSellerInfo.setOnClickListener(v -> viewSellerProfile());
+
+        // Buy now
+        btnBuy.setOnClickListener(v -> buyListing());
     }
 
     private void loadListingDetail(long listingId) {
@@ -198,6 +204,8 @@ public class ListingDetailFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse apiResponse = response.body();
+                    Log.d(TAG, "API Response: success=" + apiResponse.isSuccess() + ", message=" + apiResponse.getMessage());
+                    
                     if (apiResponse.isSuccess()) {
                         try {
                             parseListing(apiResponse.getData());
@@ -214,6 +222,14 @@ public class ListingDetailFragment extends Fragment {
                         showError(apiResponse.getMessage());
                     }
                 } else {
+                    Log.e(TAG, "API call failed with code: " + response.code());
+                    if (response.errorBody() != null) {
+                        try {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            Log.e(TAG, "Could not read error body", e);
+                        }
+                    }
                     showError("Không thể tải thông tin sản phẩm");
                 }
             }
@@ -233,7 +249,14 @@ public class ListingDetailFragment extends Fragment {
         } else {
             com.google.gson.Gson gson = new com.google.gson.Gson();
             String json = gson.toJson(data);
+            Log.d(TAG, "Listing JSON data: " + json);
             listing = gson.fromJson(json, Listing.class);
+        }
+        
+        // Check if userDisplayName is received correctly
+        if (listing != null) {
+            Log.d(TAG, "Parsed listing - userDisplayName: " + listing.getUserDisplayName() +
+                    ", userId: " + listing.getUserId());
         }
     }
 
@@ -348,50 +371,118 @@ public class ListingDetailFragment extends Fragment {
     }
 
     private void loadSellerInfo() {
-        if (listing == null || listing.getUserId() == null) return;
+        if (listing == null || listing.getUserId() == null) {
+            Log.d(TAG, "Cannot load seller info: listing is null or userId is null");
+            return;
+        }
 
+        Log.d(TAG, "Loading seller info for userId: " + listing.getUserId());
         Call<UserProfileResponse> call = apiService.getUserProfile(listing.getUserId());
         call.enqueue(new Callback<UserProfileResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserProfileResponse> call, @NonNull Response<UserProfileResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     UserProfileResponse userResponse = response.body();
+                    
+                    // Log raw response data for debugging
+                    Log.d(TAG, "Seller API raw data: userId=" + userResponse.getUserId() + 
+                          ", displayName=" + userResponse.getDisplayName());
+                    
+                    // The success check is now improved in UserProfileResponse class
+                    Log.d(TAG, "Seller API response: success=" + userResponse.isSuccess());
+                    
                     if (userResponse.isSuccess()) {
                         seller = userResponse.getData();
+                        if (seller != null) {
+                            Log.d(TAG, "Loaded seller info: displayName=" + seller.getDisplayName() + 
+                                    ", avatarUrl=" + seller.getAvatarUrl());
+                        } else {
+                            Log.d(TAG, "Seller data is null even though response was successful");
+                        }
                         displaySellerInfo();
+                    } else {
+                        Log.d(TAG, "Seller API response was not successful");
+                        displaySellerInfo(); // Still try to display what we have
                     }
+                } else {
+                    Log.e(TAG, "Failed to load seller info, HTTP status: " + response.code());
+                    displaySellerInfo(); // Fallback to other data sources
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserProfileResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Error loading seller info", t);
+                // Even when the API call fails, try to display whatever seller info we have
+                displaySellerInfo();
             }
         });
     }
 
     private void displaySellerInfo() {
-        if (seller == null) return;
-
-        tvSellerName.setText(seller.getDisplayName());
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
-        if (seller.getCreatedAt() != null) {
-            tvSellerJoinDate.setText("Thành viên từ " + dateFormat.format(seller.getCreatedAt()));
-        } else {
-            tvSellerJoinDate.setText("Thành viên từ 2024");
+        // Log để kiểm tra dữ liệu
+        if (listing != null) {
+            Log.d(TAG, "userDisplayName from listing: " + listing.getUserDisplayName() + 
+                   ", userId: " + listing.getUserId());
         }
+        
+        // Ưu tiên hiển thị seller từ API, fallback sang userDisplayName nếu không có
+        if (seller != null && seller.getDisplayName() != null && !seller.getDisplayName().isEmpty()) {
+            Log.d(TAG, "Displaying seller from API data: " + seller.getDisplayName());
+            tvSellerName.setText(seller.getDisplayName());
 
-        // Avatar
-        if (seller.getAvatarUrl() != null && !seller.getAvatarUrl().isEmpty()) {
-            Glide.with(this)
-                    .load(seller.getAvatarUrl())
-                    .placeholder(R.drawable.user)
-                    .error(R.drawable.user)
-                    .circleCrop()
-                    .into(ivSellerAvatar);
-        } else {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
+            if (seller.getCreatedAt() != null) {
+                tvSellerJoinDate.setText("Thành viên từ " + dateFormat.format(seller.getCreatedAt()));
+            } else {
+                tvSellerJoinDate.setText("Thành viên từ 2024");
+            }
+            if (seller.getAvatarUrl() != null && !seller.getAvatarUrl().isEmpty()) {
+                Glide.with(this)
+                        .load(seller.getAvatarUrl())
+                        .placeholder(R.drawable.user)
+                        .error(R.drawable.user)
+                        .circleCrop()
+                        .into(ivSellerAvatar);
+            } else {
+                ivSellerAvatar.setImageResource(R.drawable.user);
+            }
+        } else if (listing != null && listing.getUserDisplayName() != null && !listing.getUserDisplayName().isEmpty()) {
+            tvSellerName.setText(listing.getUserDisplayName());
+            tvSellerJoinDate.setText("Thành viên");
             ivSellerAvatar.setImageResource(R.drawable.user);
+        } else {
+            // Fallback to local user data if we're looking at our own listing
+            SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+            long currentUserId = prefs.getLong("userId", -1);
+            
+            if (listing != null && listing.getUserId() != null && currentUserId == listing.getUserId()) {
+                String currentUserDisplayName = prefs.getString("displayName", "");
+                if (!currentUserDisplayName.isEmpty()) {
+                    tvSellerName.setText(currentUserDisplayName);
+                    tvSellerJoinDate.setText("Thành viên");
+                    
+                    String avatarUrl = prefs.getString("avatarUrl", "");
+                    if (!avatarUrl.isEmpty()) {
+                        Glide.with(this)
+                            .load(avatarUrl)
+                            .placeholder(R.drawable.user)
+                            .error(R.drawable.user)
+                            .circleCrop()
+                            .into(ivSellerAvatar);
+                    } else {
+                        ivSellerAvatar.setImageResource(R.drawable.user);
+                    }
+                } else {
+                    tvSellerName.setText("Bạn");
+                    tvSellerJoinDate.setText("");
+                    ivSellerAvatar.setImageResource(R.drawable.user);
+                }
+            } else {
+                tvSellerName.setText("Không rõ người đăng");
+                tvSellerJoinDate.setText("");
+                ivSellerAvatar.setImageResource(R.drawable.user);
+            }
         }
 
         rbSellerRating.setRating(4.5f);
@@ -450,8 +541,31 @@ public class ListingDetailFragment extends Fragment {
                 .setTitle("Liên hệ người bán")
                 .setMessage("Bạn muốn liên hệ với " + seller.getDisplayName() + " qua:")
                 .setPositiveButton("Tin nhắn", (dialog, which) -> {
-                    // TODO: Navigate to chat
-                    Toast.makeText(requireContext(), "Tính năng chat đang phát triển", Toast.LENGTH_SHORT).show();
+                    // Get current user ID
+                    SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    long currentUserId = prefs.getLong("userId", -1);
+                    
+                    if (currentUserId == -1) {
+                        Toast.makeText(requireContext(), "Vui lòng đăng nhập để liên hệ người bán", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    
+                    // Navigate to chat fragment
+                    Bundle args = new Bundle();
+                    args.putLong("myId", currentUserId);
+                    args.putLong("otherId", seller.getId());
+                    args.putString("otherName", seller.getDisplayName());
+                    args.putLong("listingId", listingId);
+                    
+                    ChatFragment chatFragment = ChatFragment.newInstance(
+                            -1, // roomId will be created
+                            currentUserId,
+                            seller.getId(),
+                            seller.getDisplayName(),
+                            listingId
+                    );
+                    
+                    ((MainMenu) requireActivity()).replaceFragment(chatFragment);
                 })
                 .setNeutralButton("Gọi điện", (dialog, which) -> {
                     Toast.makeText(requireContext(), "Tính năng gọi điện đang phát triển", Toast.LENGTH_SHORT).show();
@@ -517,6 +631,15 @@ public class ListingDetailFragment extends Fragment {
 
         // TODO: Navigate to seller profile fragment
         Toast.makeText(requireContext(), "Xem profile của " + seller.getDisplayName(), Toast.LENGTH_SHORT).show();
+    }
+
+    private void buyListing() {
+        if (listing == null) {
+            Toast.makeText(requireContext(), "Không thể mua sản phẩm này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // TODO: Thực hiện logic mua hàng hoặc gửi offer
+        Toast.makeText(requireContext(), "Tính năng mua đang phát triển", Toast.LENGTH_SHORT).show();
     }
 
     private void showLoadingState() {

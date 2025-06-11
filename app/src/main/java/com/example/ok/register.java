@@ -21,7 +21,9 @@ import com.example.ok.api.ApiService;
 import com.example.ok.api.RetrofitClient;
 import com.example.ok.model.ApiResponse;
 import com.example.ok.model.GoogleAuthRequest;
+import com.example.ok.model.JwtAuthResponse;
 import com.example.ok.model.RegisterRequest;
+import com.example.ok.util.JwtUtils;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -67,7 +69,8 @@ public class register extends AppCompatActivity {
         TextView firstLine = findViewById(R.id.optionLogin3);
         TextView secondLine = findViewById(R.id.optionLogin4);
 
-        // Initialize API service
+        // Initialize RetrofitClient before using API services
+        RetrofitClient.init(this);
         apiService = RetrofitClient.getApiService();
 
         // Initialize progress dialog
@@ -149,9 +152,41 @@ public class register extends AppCompatActivity {
                     ApiResponse apiResponse = response.body();
 
                     if (apiResponse.isSuccess()) {
-                        // Handle successful registration/login
-                        Object dataObj = apiResponse.getData();
-                        saveUserSession(dataObj);
+                        // Handle successful registration/login - check if it's JWT response format
+                        try {
+                            JwtAuthResponse authResponse = apiResponse.getDataAs(JwtAuthResponse.class);
+                            if (authResponse != null && authResponse.getToken() != null) {
+                                // Save JWT tokens to auth_prefs for API authentication
+                                SharedPreferences authPrefs = getSharedPreferences("auth_prefs", MODE_PRIVATE);
+                                SharedPreferences.Editor authEditor = authPrefs.edit();
+                                authEditor.putString("auth_token", authResponse.getToken());
+                                authEditor.putString("refresh_token", authResponse.getRefreshToken());
+                                authEditor.commit(); // Use commit() instead of apply() for immediate write
+                                
+                                Log.d("GOOGLE_AUTH", "=== JWT TOKEN SAVED (Google Register) ===");
+                                Log.d("GOOGLE_AUTH", "Token length: " + authResponse.getToken().length());
+                                Log.d("GOOGLE_AUTH", "Token saved to auth_prefs: auth_token");
+                                Log.d("GOOGLE_AUTH", "Verification - token retrieved: " + authPrefs.getString("auth_token", "").length());
+                                Log.d("GOOGLE_AUTH", "=== END TOKEN SAVE ===");
+                                
+                                // Get userId from token and save user session
+                                Long userId = getUserIdFromToken(authResponse.getToken());
+                                if (userId != null) {
+                                    saveUserSession(userId);
+                                } else {
+                                    Log.e("GOOGLE_AUTH", "Could not extract userId from token");
+                                }
+                            } else {
+                                // Fallback to old format - save user ID directly
+                                Object dataObj = apiResponse.getData();
+                                saveUserSession(dataObj);
+                            }
+                        } catch (Exception e) {
+                            Log.e("GOOGLE_AUTH", "Error parsing auth response", e);
+                            // Fallback to old format
+                            Object dataObj = apiResponse.getData();
+                            saveUserSession(dataObj);
+                        }
 
                         // Navigate to main screen
                         Toast.makeText(register.this, "Đăng ký Google thành công", Toast.LENGTH_SHORT).show();
@@ -210,6 +245,38 @@ public class register extends AppCompatActivity {
         editor.putLong("userId", userId);
         editor.putBoolean("isLoggedIn", true);
         editor.apply();
+        
+        // Send FCM token to server after successful registration
+        sendFcmTokenToServer(userId);
+    }
+    
+    private void sendFcmTokenToServer(long userId) {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String fcmToken = prefs.getString("fcm_token", null);
+        
+        if (fcmToken != null) {
+            Call<ApiResponse> call = apiService.updateFcmToken(userId, fcmToken);
+            call.enqueue(new Callback<ApiResponse>() {
+                @Override
+                public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Log.d("REGISTER", "FCM token sent to server successfully");
+                    } else {
+                        Log.e("REGISTER", "Failed to send FCM token to server: " + response.code());
+                    }
+                }
+                
+                @Override
+                public void onFailure(Call<ApiResponse> call, Throwable t) {
+                    Log.e("REGISTER", "Error sending FCM token to server", t);
+                }
+            });
+        }
+    }
+
+    // Method to decode JWT token to get userId
+    private Long getUserIdFromToken(String token) {
+        return JwtUtils.getUserIdFromToken(token);
     }
 
     // ...existing code...

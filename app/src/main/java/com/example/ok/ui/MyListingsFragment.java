@@ -49,12 +49,12 @@ public class MyListingsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_my_listings, container, false);
-
-        initViews(view);
+        View view = inflater.inflate(R.layout.fragment_my_listings, container, false);        initViews(view);
         setupRecyclerView();
         setupClickListeners();
 
+        // Initialize RetrofitClient before using API services
+        RetrofitClient.init(requireContext());
         apiService = RetrofitClient.getApiService();
         loadMyListings();
 

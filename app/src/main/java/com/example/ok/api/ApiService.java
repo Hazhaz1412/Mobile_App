@@ -131,11 +131,28 @@ public interface ApiService {
     @POST("api/listings/{listingId}/interact")
     Call<ApiResponse> incrementInteraction(
             @Path("listingId") Long listingId
-    );
-
-    @GET("api/listings/categories")
+    );    @GET("api/listings/categories")
     Call<ApiResponse> getAllCategories();
 
     @GET("api/listings/conditions")
     Call<ApiResponse> getAllConditions();
+    
+    // User blocking and reporting
+    @POST("api/users/{userId}/block/{targetUserId}")
+    Call<ApiResponse> blockUser(@Path("userId") Long userId, @Path("targetUserId") Long targetUserId);
+    
+    @POST("api/users/{userId}/unblock/{targetUserId}")
+    Call<ApiResponse> unblockUser(@Path("userId") Long userId, @Path("targetUserId") Long targetUserId);
+    
+    @POST("api/users/{userId}/report/{targetUserId}")
+    Call<ApiResponse> reportUser(@Path("userId") Long userId, @Path("targetUserId") Long targetUserId, @Query("reason") String reason);
+      @GET("api/users/{userId}/blocked")
+    Call<ApiResponse> getBlockedUsers(@Path("userId") Long userId);
+    
+    // FCM Token management
+    @POST("api/users/{userId}/fcm-token")
+    Call<ApiResponse> updateFcmToken(@Path("userId") Long userId, @Query("token") String fcmToken);
+    
+    @DELETE("api/users/{userId}/fcm-token")
+    Call<ApiResponse> removeFcmToken(@Path("userId") Long userId);
 }

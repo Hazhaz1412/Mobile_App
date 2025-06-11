@@ -136,7 +136,7 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@drawable/customwhitebutton"
-                    android:drawableTop="@drawable/user"
+                    android:drawableTop="@drawable/ic_user"
                     android:text=""
                     android:padding="8dp"
                     android:gravity="center" />

@@ -50,7 +50,7 @@
                         android:id="@+id/profileImage"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:src="@drawable/user"
+                        android:src="@drawable/ic_user"
                         app:civ_border_color="#EEEEEE"
                         app:civ_border_width="2dp" />
 
@@ -235,8 +235,7 @@
                         android:text="Quản lý tài khoản"
                         android:textColor="@color/black"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
-                    <com.google.android.material.button.MaterialButton
+                        android:textStyle="bold" />                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnLogout"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"
@@ -247,6 +246,18 @@
                         app:icon="@drawable/logout"
                         app:iconTint="@color/black"
                         app:strokeColor="@color/black" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNotificationSettings"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Cài đặt thông báo"
+                        android:textColor="@color/purple_500"
+                        app:icon="@drawable/notification"
+                        app:iconTint="@color/purple_500"
+                        app:strokeColor="@color/purple_500" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnDeactivateAccount"

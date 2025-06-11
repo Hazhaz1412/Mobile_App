@@ -159,6 +159,8 @@ public class CreateListingFragment extends Fragment implements LocationListener 
         setupClickListeners();
 
         try {
+            // Initialize RetrofitClient before using any API services
+            RetrofitClient.init(requireContext());
             apiService = RetrofitClient.getApiService();
             listingApiService = RetrofitClient.getListingApiService();
 

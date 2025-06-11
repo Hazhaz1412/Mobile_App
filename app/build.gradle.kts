@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -54,6 +55,13 @@ dependencies {
     implementation(libs.flexbox)
     implementation(libs.viewpager2)
     implementation(libs.navigation.runtime.android)
+    implementation(libs.okhttp)
+    
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
+    
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
 

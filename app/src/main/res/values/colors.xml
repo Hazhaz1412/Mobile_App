@@ -19,6 +19,11 @@
     <color name="background_gray">#FAFAFA</color>
     <!-- App specific colors -->
     <color name="primary_color">#FF2196F3</color>
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
     <color name="text_secondary">#FF757575</color>
     <color name="gray">#808080</color>
     <!-- Tag colors -->
@@ -29,4 +34,9 @@
     <color name="status_available">#FF4CAF50</color>
     <color name="status_sold">#FFF44336</color>
     <color name="status_paused">#FFFF9800</color>
+    
+    <!-- Action colors -->
+    <color name="warning_color">#FFFF9800</color>
+    <color name="error_color">#FFF44336</color>
+    <color name="success_color">#FF4CAF50</color>
 </resources>

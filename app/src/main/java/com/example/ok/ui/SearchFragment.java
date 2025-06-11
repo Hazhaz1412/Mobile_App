@@ -93,9 +93,10 @@ public class SearchFragment extends Fragment {
         
         return view;
     }
-    
-    private void initApiService() {
+      private void initApiService() {
         try {
+            // Initialize RetrofitClient before using API services
+            RetrofitClient.init(requireContext());
             listingApiService = RetrofitClient.getListingApiService();
         } catch (Exception e) {
             Log.e(TAG, "Error initializing API service", e);

@@ -53,7 +53,8 @@ public class ForgotPass extends AppCompatActivity {
         etEmail = findViewById(R.id.txtEmailForgot1);
         btnForgotPass = findViewById(R.id.btnForgotPass);
 
-        // Initialize API service
+        // Initialize RetrofitClient before using API services
+        RetrofitClient.init(this);
         apiService = RetrofitClient.getApiService();
 
         // Set click listener
