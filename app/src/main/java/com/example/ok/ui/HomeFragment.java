@@ -3,11 +3,13 @@ package com.example.ok.ui;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,7 +29,11 @@ import com.example.ok.api.RetrofitClient;
 import com.example.ok.model.*;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -45,6 +51,7 @@ public class HomeFragment extends Fragment {
 
     // Category containers
     private LinearLayout categoriesGrid;
+    private List<Category> categories = new ArrayList<>();
 
     // API Services
     private ApiService apiService;
@@ -103,11 +110,9 @@ public class HomeFragment extends Fragment {
 
         // Categories grid - tìm LinearLayout chứa categories
         categoriesGrid = findCategoriesGrid(view);
-    }
-
-    private LinearLayout findCategoriesGrid(View view) {
-        // Tìm LinearLayout chứa 5 categories bằng cách traverse
-        // Categories grid là LinearLayout có weightSum="5" và orientation="horizontal"
+    }    private LinearLayout findCategoriesGrid(View view) {
+        // Tìm LinearLayout chứa 7 categories trong 2 hàng
+        // Categories grid là LinearLayout có orientation="vertical" chứa 2 hàng
         return findLinearLayoutWithCategories(view);
     }
 
@@ -115,20 +120,35 @@ public class HomeFragment extends Fragment {
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
 
-            // Check if this is the categories LinearLayout
+            // Check if this is the categories LinearLayout container (vertical)
             if (view instanceof LinearLayout) {
                 LinearLayout linearLayout = (LinearLayout) view;
-                if (linearLayout.getOrientation() == LinearLayout.HORIZONTAL &&
-                        linearLayout.getChildCount() == 5) {
-                    // Verify it contains category items by checking first child
-                    View firstChild = linearLayout.getChildAt(0);
-                    if (firstChild instanceof LinearLayout) {
-                        LinearLayout firstCategory = (LinearLayout) firstChild;
-                        // Check if it has MaterialCardView and TextView (category structure)
-                        if (firstCategory.getChildCount() >= 2) {
-                            View cardView = firstCategory.getChildAt(0);
-                            if (cardView instanceof MaterialCardView) {
-                                return linearLayout; // Found it!
+                if (linearLayout.getOrientation() == LinearLayout.VERTICAL &&
+                        linearLayout.getChildCount() == 2) {
+                    // Check if both children are horizontal LinearLayouts with categories
+                    View firstRow = linearLayout.getChildAt(0);
+                    View secondRow = linearLayout.getChildAt(1);
+                    
+                    if (firstRow instanceof LinearLayout && secondRow instanceof LinearLayout) {
+                        LinearLayout firstRowLayout = (LinearLayout) firstRow;
+                        LinearLayout secondRowLayout = (LinearLayout) secondRow;
+                        
+                        // First row should have 4 categories, second row should have 3
+                        if (firstRowLayout.getOrientation() == LinearLayout.HORIZONTAL &&
+                            firstRowLayout.getChildCount() == 4 &&
+                            secondRowLayout.getOrientation() == LinearLayout.HORIZONTAL &&
+                            secondRowLayout.getChildCount() == 3) {
+                            
+                            // Verify first child of first row has category structure
+                            View firstCategory = firstRowLayout.getChildAt(0);
+                            if (firstCategory instanceof LinearLayout) {
+                                LinearLayout categoryLayout = (LinearLayout) firstCategory;
+                                if (categoryLayout.getChildCount() >= 2) {
+                                    View cardView = categoryLayout.getChildAt(0);
+                                    if (cardView instanceof MaterialCardView) {
+                                        return linearLayout; // Found the categories container!
+                                    }
+                                }
                             }
                         }
                     }
@@ -252,51 +272,11 @@ public class HomeFragment extends Fragment {
 
         // Setup category click listeners
         setupCategoryClickListeners();
-    }
-
-    private void setupCategoryClickListeners() {
-        if (categoriesGrid == null) {
-            return;
-        }
-
-        // Array of category info: {name, categoryId}
-        String[][] categoryInfo = {
-                {"Điện tử", "1"},
-                {"Gia dụng", "3"},
-                {"Khác", null},
-                {"Sách & Văn phòng phẩm", "5"},
-                {"Thể thao & Giải trí", "6"}
-        };
-
-        // Set click listeners for each category
-        for (int i = 0; i < categoriesGrid.getChildCount() && i < categoryInfo.length; i++) {
-            View categoryView = categoriesGrid.getChildAt(i);
-            final int categoryIndex = i;
-
-            if (categoryView instanceof LinearLayout) {
-                // Make the entire category LinearLayout clickable
-                categoryView.setClickable(true);
-                categoryView.setFocusable(true);
-                categoryView.setBackground(getResources().getDrawable(android.R.drawable.menuitem_background, null));
-
-                categoryView.setOnClickListener(v -> {
-                    String categoryName = categoryInfo[categoryIndex][0];
-                    String categoryIdStr = categoryInfo[categoryIndex][1];
-                    Long categoryId = categoryIdStr != null ? Long.parseLong(categoryIdStr) : null;
-
-                    navigateToCategoryListings(categoryName, categoryId);
-                });
-
-                // Add ripple effect
-                categoryView.setOnTouchListener((v, event) -> {
-                    v.performClick();
-                    return false;
-                });
-            }
-        }
-    }
-
-    private void loadData() {
+    }    private void setupCategoryClickListeners() {
+        // Categories will be loaded from API and setup in updateCategoriesUI()
+        // This method is kept for backward compatibility
+    }private void loadData() {
+        loadCategories();
         loadHomeRecommendations();
         loadFeaturedListings();
     }
@@ -380,16 +360,17 @@ public class HomeFragment extends Fragment {
     private void showEmptyState() {
         // TODO: Show empty state view
         Toast.makeText(getContext(), "Chưa có sản phẩm nào", Toast.LENGTH_SHORT).show();
-    }
-
-    // Navigation methods
+    }    // Navigation methods
     private void navigateToCategoryListings(String categoryName, Long categoryId) {
-        Toast.makeText(getContext(), "Xem danh mục: " + categoryName, Toast.LENGTH_SHORT).show();
-        // TODO: Implement navigation to category listings
-        // Bundle args = new Bundle();
-        // args.putString("categoryName", categoryName);
-        // if (categoryId != null) args.putLong("categoryId", categoryId);
-        // Navigation.findNavController(getView()).navigate(R.id.action_home_to_category, args);
+        Log.d("HomeFragment", "Navigating to category: " + categoryName + " (ID: " + categoryId + ")");
+        
+        // Navigate to SearchFragment with category filter
+        if (getActivity() instanceof MainMenu) {
+            SearchFragment searchFragment = SearchFragment.newInstance(categoryId, categoryName);
+            ((MainMenu) getActivity()).replaceFragment(searchFragment);
+        } else {
+            Toast.makeText(getContext(), "Xem danh mục: " + categoryName, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void navigateToListingDetail(Listing listing) {
@@ -436,7 +417,132 @@ public class HomeFragment extends Fragment {
 
     private void showListingOptions(Listing listing) {
         // TODO: Show bottom sheet or popup menu with options
-        Toast.makeText(getContext(), "Tùy chọn cho: " + listing.getTitle(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Tùy chọn cho: " + listing.getTitle(), Toast.LENGTH_SHORT).show();    }
+
+    private void loadCategories() {
+        if (apiService == null) {
+            Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<ApiResponse> call = apiService.getAllCategories();
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
+                        try {
+                            // Parse categories từ JSON
+                            Gson gson = new Gson();
+                            String json = gson.toJson(apiResponse.getData());
+                            Type listType = new TypeToken<List<Category>>(){}.getType();
+                            categories = gson.fromJson(json, listType);
+                            
+                            Log.d("HomeFragment", "Loaded " + categories.size() + " categories");
+                            
+                            // Update UI với categories mới
+                            updateCategoriesUI();
+                            
+                        } catch (Exception e) {
+                            Log.e("HomeFragment", "Error parsing categories", e);
+                            setupDefaultCategories();
+                        }
+                    } else {
+                        setupDefaultCategories();
+                    }
+                } else {
+                    setupDefaultCategories();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Log.e("HomeFragment", "Failed to load categories", t);
+                setupDefaultCategories();
+            }
+        });
+    }    private void setupDefaultCategories() {
+        categories.clear();
+        // Sử dụng thứ tự giống như API response
+        categories.add(new Category(1L, "Điện tử", null, null, true));
+        categories.add(new Category(2L, "Thời trang", null, null, true));
+        categories.add(new Category(3L, "Gia dụng", null, null, true));
+        categories.add(new Category(4L, "Xe cộ", null, null, true));
+        categories.add(new Category(5L, "Sách & Văn phòng phẩm", null, null, true));
+        categories.add(new Category(6L, "Thể thao & Giải trí", null, null, true));
+        categories.add(new Category(7L, "Khác", null, null, true));
+        
+        updateCategoriesUI();
+    }
+
+    private void updateCategoriesUI() {
+        if (categoriesGrid == null || categories.isEmpty()) {
+            return;
+        }
+
+        // Categories grid có cấu trúc: LinearLayout vertical chứa 2 hàng
+        // Hàng 1: 4 categories (index 0-3)
+        // Hàng 2: 3 categories (index 4-6)
+        
+        if (categoriesGrid.getChildCount() >= 2) {
+            // Hàng đầu tiên (4 categories)
+            View firstRowView = categoriesGrid.getChildAt(0);
+            if (firstRowView instanceof LinearLayout) {
+                LinearLayout firstRow = (LinearLayout) firstRowView;
+                updateCategoryRow(firstRow, 0, Math.min(4, categories.size()));
+            }
+            
+            // Hàng thứ hai (3 categories)
+            View secondRowView = categoriesGrid.getChildAt(1);
+            if (secondRowView instanceof LinearLayout) {
+                LinearLayout secondRow = (LinearLayout) secondRowView;
+                updateCategoryRow(secondRow, 4, Math.min(categories.size(), 7));
+            }
+        }
+    }
+
+    private void updateCategoryRow(LinearLayout row, int startIndex, int endIndex) {
+        for (int i = 0; i < row.getChildCount() && (startIndex + i) < endIndex; i++) {
+            int categoryIndex = startIndex + i;
+            View categoryView = row.getChildAt(i);
+            
+            if (categoryView instanceof LinearLayout && categoryIndex < categories.size()) {
+                LinearLayout categoryLayout = (LinearLayout) categoryView;
+                
+                // Tìm TextView trong category layout
+                TextView categoryText = findCategoryTextView(categoryLayout);
+                if (categoryText != null) {
+                    categoryText.setText(categories.get(categoryIndex).getName());
+                }
+                
+                // Set click listener cho category
+                final int finalCategoryIndex = categoryIndex;
+                categoryView.setClickable(true);
+                categoryView.setFocusable(true);
+                categoryView.setBackground(getResources().getDrawable(android.R.drawable.menuitem_background, null));
+                
+                categoryView.setOnClickListener(v -> {
+                    Category category = categories.get(finalCategoryIndex);
+                    navigateToCategoryListings(category.getName(), category.getId());
+                });
+            }
+        }
+    }
+
+    private TextView findCategoryTextView(ViewGroup parent) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            if (child instanceof TextView) {
+                return (TextView) child;
+            } else if (child instanceof ViewGroup) {
+                TextView result = findCategoryTextView((ViewGroup) child);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

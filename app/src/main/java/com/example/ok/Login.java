@@ -26,6 +26,7 @@ import com.example.ok.model.GoogleAuthRequest;
 import com.example.ok.model.JwtAuthResponse;
 import com.example.ok.model.LoginRequest;
 import com.example.ok.util.JwtUtils;
+import com.example.ok.util.SessionManager;
 import com.google.gson.Gson;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -46,13 +47,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class Login extends AppCompatActivity {
-
-    private EditText etEmail, etPassword;
+public class Login extends AppCompatActivity {    private EditText etEmail, etPassword;
     private Button btnLogin;
     private TextView tvRegister;
     private ApiService apiService;
     private AuthApiService authApiService;
+    private SessionManager sessionManager;
 
     private static final int RC_SIGN_IN = 9001;
     private GoogleSignInClient googleSignInClient;
@@ -96,12 +96,11 @@ public class Login extends AppCompatActivity {
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
 // Set up the button click listener
-        authGG.setOnClickListener(v -> signInWithGoogle());
-
-        // Initialize RetrofitClient before using any API services
+        authGG.setOnClickListener(v -> signInWithGoogle());        // Initialize RetrofitClient before using any API services
         RetrofitClient.init(this);
         apiService = RetrofitClient.getApiService();
         authApiService = RetrofitClient.getAuthApiService();
+        sessionManager = new SessionManager(this);
 
         if (getIntent().hasExtra("registration_success")) {
             Toast.makeText(this, "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
@@ -323,14 +322,18 @@ public class Login extends AppCompatActivity {
                         Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    // Phương thức giải mã token JWT để lấy userId
+    }    // Phương thức giải mã token JWT để lấy userId
     private Long getUserIdFromToken(String token) {
         return JwtUtils.getUserIdFromToken(token);
     }
 
-    private void saveUserSession(Object userIdObj) {
+    private void saveUserSession(Long userId) {
+        if (userId != null) {
+            saveUserSession((Object) userId);
+        } else {
+            Log.e("LOGIN", "UserId is null, cannot save session");
+        }
+    }private void saveUserSession(Object userIdObj) {
         long userId;
 
         if (userIdObj instanceof Integer) {
@@ -351,6 +354,15 @@ public class Login extends AppCompatActivity {
             return;
         }
 
+        // Use SessionManager to save user session
+        sessionManager.saveUserId(userId);
+        
+        Log.d("LOGIN", "=== USER SESSION SAVED ===");
+        Log.d("LOGIN", "UserId saved: " + userId);
+        Log.d("LOGIN", "SessionManager getUserId(): " + sessionManager.getUserId());
+        Log.d("LOGIN", "=== END SESSION SAVE ===");
+        
+        // Keep the old SharedPreferences for backward compatibility (if needed elsewhere)
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putLong("userId", userId);
@@ -423,8 +435,7 @@ public class Login extends AppCompatActivity {
             completeLogout(context, redirectToLogin);
         }
     }
-    
-    private static void completeLogout(Context context, boolean redirectToLogin) {
+      private static void completeLogout(Context context, boolean redirectToLogin) {
         // Clear authentication tokens
         SharedPreferences authPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
         authPrefs.edit()
@@ -432,7 +443,11 @@ public class Login extends AppCompatActivity {
             .remove("refresh_token")
             .apply();
         
-        // Clear user session
+        // Clear user session using SessionManager
+        SessionManager sessionManager = new SessionManager(context);
+        sessionManager.clearSession();
+        
+        // Clear legacy user session for backward compatibility
         SharedPreferences userPrefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         userPrefs.edit()
             .remove("userId")

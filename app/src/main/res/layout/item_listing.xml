@@ -36,17 +36,36 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:maxLines="2"
-                android:ellipsize="end" />
-
-            <TextView
-                android:id="@+id/tv_price"
+                android:ellipsize="end" />            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="1,000,000 VNĐ"
-                android:textSize="18sp"
-                android:textColor="@color/price_color"
-                android:textStyle="bold"
-                android:layout_marginTop="4dp" />
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_negotiable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💬 Có thể thương lượng"
+                    android:textSize="11sp"
+                    android:textColor="@color/success_color"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone"
+                    android:padding="2dp" />
+
+                <TextView
+                    android:id="@+id/tv_price"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="1,000,000 VNĐ"
+                    android:textSize="18sp"
+                    android:textColor="@color/price_color"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tv_location"

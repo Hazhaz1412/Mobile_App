@@ -5,10 +5,14 @@ public class Category {
     private String name;
     private String description;
     private String iconUrl;
-    private Boolean isActive;
-
-    // Constructors
+    private Boolean isActive;    // Constructors
     public Category() {}
+
+    public Category(Long id, String name) {
+        this.id = id;
+        this.name = name;
+        this.isActive = true;
+    }
 
     public Category(Long id, String name, String description, String iconUrl, Boolean isActive) {
         this.id = id;

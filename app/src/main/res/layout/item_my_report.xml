@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Status Indicator -->
+        <View
+            android:id="@+id/status_indicator"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/colorPrimary" />
+
+        <!-- Report Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tv_report_type"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="👤 Báo cáo người dùng"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏳ Chờ xử lý"
+                android:textSize="12sp"
+                android:background="@drawable/status_background"
+                android:padding="4dp" />
+
+        </LinearLayout>
+
+        <!-- Report Reason -->
+        <TextView
+            android:id="@+id/tv_report_reason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lừa đảo/Gian lận"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorError"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Reported Item -->
+        <TextView
+            android:id="@+id/tv_reported_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Người dùng: Trần Thị B"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Date -->
+        <TextView
+            android:id="@+id/tv_created_at"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="15/06/2025"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btn_details"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Chi tiết"
+                android:textSize="12sp"
+                android:background="@drawable/button_outline"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Hủy báo cáo"
+                android:textSize="12sp"
+                android:background="@drawable/button_error"
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

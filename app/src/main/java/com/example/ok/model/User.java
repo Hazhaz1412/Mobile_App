@@ -91,9 +91,12 @@ public class User {
 
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public void setStatus(String status) {
+    }    public void setStatus(String status) {
         this.status = status;
+    }
+    
+    // Compatibility method for adapters
+    public String getUsername() {
+        return displayName;
     }
 }

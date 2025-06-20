@@ -49,4 +49,8 @@
     <string name="i_n_t">Điện tử</string>    <string name="t_m_ki_m_s_n_ph_m_d_ch_v">Tìm kiếm sản phẩm, dịch vụ...</string>    <string name="no_messages_yet">Chưa có tin nhắn nào</string>
     <string name="unread_messages">%d tin nhắn chưa đọc</string>
     <string name="image_message_notification_text">📷 Hình ảnh</string>
+    <string name="t_i_kho_n">Tài khoản</string>
+    <string name="chat">Chat</string>
+    <string name="b_i_ng">Bài đăng</string>
+    <string name="trang_ch">Trang chủ</string>
 </resources>

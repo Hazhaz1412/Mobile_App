@@ -5,9 +5,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-
-    <application
+    <uses-permission android:name="android.permission.VIBRATE" />    <application
+        android:name=".OkApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -17,10 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ok"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31">
-
-        <activity
+        tools:targetApi="31"><activity
             android:name=".UserProfile"
+            android:exported="false" />
+        <activity
+            android:name=".ui.BlockedUsersActivity"
             android:exported="false" />
         <activity
             android:name=".ResetPassword"
@@ -45,10 +45,16 @@
             android:exported="false" />
         <activity
             android:name=".register"
-            android:exported="false" />
-        <activity
+            android:exported="false" />        <activity
             android:name=".Login"
-            android:exported="false" />
+            android:exported="false" />        <activity
+            android:name=".ui.PaymentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Ok" />
+        <activity
+            android:name=".ui.RatingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Ok" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -39,10 +39,15 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import com.example.ok.utils.BlockedUserFilter;
 
 public class SearchFragment extends Fragment {
     
     private static final String TAG = "SearchFragment";
+    
+    // Arguments keys
+    private static final String ARG_CATEGORY_ID = "category_id";
+    private static final String ARG_CATEGORY_NAME = "category_name";
     
     // UI Components
     private EditText etSearch;
@@ -76,22 +81,45 @@ public class SearchFragment extends Fragment {
     private boolean isLastPage = false;
     
     private android.os.Handler searchHandler = new android.os.Handler();
-    private Runnable searchRunnable;
-    
-    @Nullable
+    private Runnable searchRunnable;    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_search, container, false);
         
+        // Handle arguments if passed
+        handleArguments();
+        
         initApiService();
+        initBlockedUserFilter();
         initViews(view);
         setupRecyclerView();
         setupListeners();
+        
+        // Update filter button appearance after setting up views and handling arguments
+        updateFilterButtonAppearance();
         
         // Load initial data
         performSearch();
         
         return view;
+    }
+    
+    /**
+     * Handle fragment arguments for category filtering
+     */
+    private void handleArguments() {
+        Bundle args = getArguments();
+        if (args != null) {
+            if (args.containsKey(ARG_CATEGORY_ID)) {
+                selectedCategoryId = args.getLong(ARG_CATEGORY_ID);
+                Log.d(TAG, "Category filter applied: " + selectedCategoryId);
+            }
+            if (args.containsKey(ARG_CATEGORY_NAME)) {
+                String categoryName = args.getString(ARG_CATEGORY_NAME);
+                Log.d(TAG, "Category name: " + categoryName);
+                // You can use categoryName to update UI if needed
+            }
+        }
     }
       private void initApiService() {
         try {
@@ -102,6 +130,20 @@ public class SearchFragment extends Fragment {
             Log.e(TAG, "Error initializing API service", e);
             Toast.makeText(getContext(), "Lỗi khởi tạo dịch vụ", Toast.LENGTH_SHORT).show();
         }
+    }
+    
+    private void initBlockedUserFilter() {
+        // Initialize and refresh blocked users list
+        BlockedUserFilter.getInstance(getContext()).refreshBlockedUsers(new BlockedUserFilter.RefreshCallback() {
+            @Override
+            public void onComplete(boolean success) {
+                if (success) {
+                    Log.d(TAG, "Blocked users list refreshed successfully");
+                } else {
+                    Log.w(TAG, "Failed to refresh blocked users list");
+                }
+            }
+        });
     }
     
     private void initViews(View view) {
@@ -207,11 +249,12 @@ public class SearchFragment extends Fragment {
         isLoading = true;
         currentPage = 0;
         isLastPage = false;
-        
-        if (listingApiService == null) {
+          if (listingApiService == null) {
             Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
             isLoading = false;
-            swipeRefresh.setRefreshing(false);
+            if (swipeRefresh != null) {
+                swipeRefresh.setRefreshing(false);
+            }
             return;
         }
         
@@ -232,19 +275,23 @@ public class SearchFragment extends Fragment {
                      ", maxPrice: " + maxPrice + 
                      ", location: " + selectedLocation);
         
-        call.enqueue(new Callback<PagedApiResponse<Listing>>() {
-            @Override
+        call.enqueue(new Callback<PagedApiResponse<Listing>>() {            @Override
             public void onResponse(@NonNull Call<PagedApiResponse<Listing>> call, @NonNull Response<PagedApiResponse<Listing>> response) {
                 isLoading = false;
-                swipeRefresh.setRefreshing(false);
+                if (swipeRefresh != null) {
+                    swipeRefresh.setRefreshing(false);
+                }
                 
                 if (response.isSuccessful() && response.body() != null) {
                     PagedApiResponse<Listing> pagedResponse = response.body();
                     
-                    if (pagedResponse.isSuccess()) {
-                        List<Listing> listings = pagedResponse.getData();
+                    if (pagedResponse.isSuccess()) {                        List<Listing> listings = pagedResponse.getData();
 
                         if (listings != null && !listings.isEmpty()) {
+                            // Filter out blocked users first
+                            BlockedUserFilter blockedUserFilter = BlockedUserFilter.getInstance(getContext());
+                            listings = blockedUserFilter.filterListings(listings);
+                            
                             // Thêm lọc client-side
                             List<Listing> filteredListings = new ArrayList<>();
                             for (Listing listing : listings) {
@@ -312,11 +359,12 @@ public class SearchFragment extends Fragment {
                     Toast.makeText(getContext(), "Lỗi: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
-            
-            @Override
+              @Override
             public void onFailure(@NonNull Call<PagedApiResponse<Listing>> call, @NonNull Throwable t) {
                 isLoading = false;
-                swipeRefresh.setRefreshing(false);
+                if (swipeRefresh != null) {
+                    swipeRefresh.setRefreshing(false);
+                }
                 adapter.clear();
                 showEmptyView();
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
@@ -940,5 +988,33 @@ public class SearchFragment extends Fragment {
             if (result.size() >= maxCount) break;
         }
         return result;
+    }
+
+    /**
+     * Create new instance with category filter
+     */
+    public static SearchFragment newInstance(Long categoryId, String categoryName) {
+        SearchFragment fragment = new SearchFragment();
+        Bundle args = new Bundle();
+        if (categoryId != null) {
+            args.putLong(ARG_CATEGORY_ID, categoryId);
+        }
+        if (categoryName != null) {
+            args.putString(ARG_CATEGORY_NAME, categoryName);
+        }
+        fragment.setArguments(args);
+        return fragment;
+    }
+    
+    /**
+     * Create new instance for general search
+     */
+    public static SearchFragment newInstance() {
+        return new SearchFragment();    }
+    
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Arguments will be handled in onCreateView when views are ready
     }
 }

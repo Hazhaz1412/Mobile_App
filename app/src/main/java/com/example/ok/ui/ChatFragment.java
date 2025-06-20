@@ -28,6 +28,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+
+import com.example.ok.api.ApiService;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -41,10 +43,11 @@ import com.example.ok.adapter.ChatAdapter;
 import com.example.ok.model.ApiResponse;
 import com.example.ok.api.ChatApiService;
 import com.example.ok.api.RetrofitClient;
+import com.example.ok.model.BlockUserRequest;
 import com.example.ok.model.ChatMessage;
 import com.example.ok.model.ChatRoom;
 import com.google.gson.Gson;
-import com.example.ok.util.FileUtil;
+import com.example.ok.utils.BlockedUserFilter;
 import com.example.ok.util.NotificationHelper;
 
 import android.app.Activity;
@@ -110,6 +113,10 @@ public class ChatFragment extends Fragment {
     
     // Track if fragment is visible to user
     private boolean isFragmentVisible = false;
+    
+    // Add block status check variables
+    private boolean isBlockedUser = false;
+    private boolean hasCheckedBlockStatus = false;
     
     public static ChatFragment newInstance(long roomId, long myId, long otherId, String otherName) {
         return newInstance(roomId, myId, otherId, otherName, -1);
@@ -208,11 +215,16 @@ public class ChatFragment extends Fragment {
         
         // Pull to refresh
         swipeRefresh.setOnRefreshListener(this::loadMoreMessages);
-        
-        // **TEMPORARY: Add test notification on double-tap of other user name**
+          // **TEMPORARY: Add test notification on double-tap of other user name**
         tvOtherUserName.setOnClickListener(v -> {
             Log.d(TAG, "User name clicked - triggering test notification");
             testNotificationManually();
+        });
+        
+        // Long click for report options
+        tvOtherUserName.setOnLongClickListener(v -> {
+            showChatReportOptions();
+            return true;
         });
         
         // Scroll listener for pagination
@@ -229,10 +241,14 @@ public class ChatFragment extends Fragment {
                 }
             }
         });
-    }
-      private void initChatRoom() {
+    }      private void initChatRoom() {
         showProgress();
         
+        // Check block status first before loading any chat content
+        checkBlockStatus();
+    }
+    
+    private void continueInitChatRoom() {
         // Add debug logging for authentication
         SharedPreferences authPrefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
         String authToken = authPrefs.getString("auth_token", "");
@@ -492,10 +508,32 @@ public class ChatFragment extends Fragment {
         } else {
             swipeRefresh.setRefreshing(false);
         }
-    }
-      private void sendMessage() {
+    }    private void sendMessage() {
         String messageText = etMessage.getText().toString().trim();
         if (TextUtils.isEmpty(messageText) || roomId == -1) return;
+        
+        Log.d(TAG, "=== SEND MESSAGE DEBUG ===");
+        Log.d(TAG, "isBlockedUser: " + isBlockedUser);
+        Log.d(TAG, "hasChecked: " + hasCheckedBlockStatus);
+        Log.d(TAG, "myId: " + myId + ", otherId: " + otherId);
+        
+        // Check if user is blocked
+        if (isBlockedUser) {
+            Log.d(TAG, "Blocked user - preventing message send");
+            Toast.makeText(getContext(), "Không thể gửi tin nhắn cho người dùng này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Double check with BlockedUserFilter
+        BlockedUserFilter filter = BlockedUserFilter.getInstance(getContext());
+        if (filter.isUserBlocked(otherId)) {
+            Log.d(TAG, "User is blocked by filter - preventing message send");
+            isBlockedUser = true;
+            Toast.makeText(getContext(), "Không thể gửi tin nhắn cho người dùng này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Log.d(TAG, "Proceeding with message send");
         
         // Clear input field and hide keyboard
         etMessage.setText("");
@@ -530,7 +568,7 @@ public class ChatFragment extends Fragment {
                     if (lastIndex >= 0) {
                         messageList.set(lastIndex, serverMessage);
                         chatAdapter.notifyItemChanged(lastIndex);
-                        Log.d(TAG, "Message sent successfully with ID: " + serverMessage.getId());
+                        Log.d(TAG, "Message sent successfully with ID: " + (serverMessage.getId() != null ? serverMessage.getId() : "null"));
                     }                } else {
                     // Message failed - show error and remove optimistic message
                     if (!isAdded() || getContext() == null) return;
@@ -595,48 +633,12 @@ public class ChatFragment extends Fragment {
     private void takePhoto() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+    }      private void sendImageMessage(Uri imageUri) {        if (roomId == -1 || imageUri == null) return;
+        
+        // TODO: Re-implement image sending functionality
+        Toast.makeText(getContext(), "Tính năng gửi ảnh đang được phát triển", Toast.LENGTH_SHORT).show();
     }
-      private void sendImageMessage(Uri imageUri) {
-        if (roomId == -1 || imageUri == null) return;
-        try {
-            // Create MultipartBody.Part from the URI
-            File file = FileUtil.getFileFromUri(requireContext(), imageUri);
-            RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
-            MultipartBody.Part imagePart = MultipartBody.Part.createFormData("imageFile", file.getName(), requestFile);
-            
-            showProgress();
-            
-            // Send the image
-            chatApiService.sendImageMessage(roomId, myId, imagePart).enqueue(new Callback<ApiResponse>() {
-                @Override
-                public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                    hideProgress();
-                    
-                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                        ChatMessage message = response.body().getDataAs(ChatMessage.class);
-                        if (message != null) {
-                            messageList.add(message);
-                            chatAdapter.notifyItemInserted(messageList.size() - 1);
-                            recyclerMessages.scrollToPosition(messageList.size() - 1);
-                        }
-                    } else {
-                        Toast.makeText(requireContext(), "Không thể gửi hình ảnh", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                
-                @Override
-                public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                    hideProgress();
-                    Toast.makeText(requireContext(), "Lỗi gửi hình ảnh: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Error sending image", t);
-                }
-            });
-        } catch (Exception e) {
-            hideProgress();
-            Toast.makeText(requireContext(), "Lỗi xử lý hình ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Error processing image", e);
-        }
-    }
+    
       private void navigateToListing() {
         if (chatRoom != null && chatRoom.getListingId() != null) {
             ListingDetailFragment fragment = ListingDetailFragment.newInstance(chatRoom.getListingId());
@@ -677,24 +679,23 @@ public class ChatFragment extends Fragment {
       private void startMessagePolling() {
         messageRunnable = new Runnable() {
             @Override
-            public void run() {
-                if (isAdded() && roomId != -1) {
-                    // Get latest message ID
-                    final long latestMessageId = !messageList.isEmpty() ? messageList.get(messageList.size() - 1).getId() : 0;
+            public void run() {                if (isAdded() && roomId != -1) {
+                    // Get latest message ID - use safe method
+                    final long latestMessageId = !messageList.isEmpty() ? 
+                        messageList.get(messageList.size() - 1).getIdSafely() : 0;
                       // Poll for new messages
                     chatApiService.getChatMessagesDirect(roomId, myId).enqueue(new Callback<List<ChatMessage>>() {
                         @Override
                         public void onResponse(@NonNull Call<List<ChatMessage>> call, @NonNull Response<List<ChatMessage>> response) {
                             if (response.isSuccessful() && response.body() != null) {
-                                List<ChatMessage> newMessages = response.body();
-                                
-                                // Filter for messages newer than our latest
+                                List<ChatMessage> newMessages = response.body();                                // Filter for messages newer than our latest
                                 List<ChatMessage> messagesToAdd = new ArrayList<>();
                                 for (ChatMessage message : newMessages) {
-                                    if (message.getId() > latestMessageId) {
+                                    // Use safe ID method
+                                    if (message.getIdSafely() > latestMessageId) {
                                         messagesToAdd.add(message);
                                     }
-                                }                                // Add new messages to UI
+                                }// Add new messages to UI
                                 if (!messagesToAdd.isEmpty()) {
                                     int insertPosition = messageList.size();
                                     messageList.addAll(messagesToAdd);
@@ -1031,6 +1032,345 @@ public class ChatFragment extends Fragment {
     }
 
     /**
+     * Show report options for chat and user
+     */
+    private void showChatReportOptions() {
+        String[] options = {
+            "📝 Xem thông tin người dùng",
+            "⚠️ Báo cáo cuộc trò chuyện",
+            "🚫 Báo cáo người dùng", 
+            "🔒 Chặn người dùng"
+        };
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Tùy chọn")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            viewUserProfile();
+                            break;
+                        case 1:
+                            showReportChatDialog();
+                            break;
+                        case 2:
+                            showReportUserDialog();
+                            break;
+                        case 3:
+                            showBlockUserDialog();
+                            break;
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void viewUserProfile() {
+        // Navigate to user profile
+        Bundle args = new Bundle();
+        args.putLong("userId", otherId);
+        args.putString("displayName", otherName);
+        
+        // Navigate to OtherUserProfileFragment
+        // This would need to be implemented in your navigation system
+        Log.d(TAG, "Navigate to user profile: " + otherName);
+    }
+    
+    private void showReportChatDialog() {
+        String[] reasons = {
+            "Lừa đảo/Gian lận",
+            "Nội dung không phù hợp", 
+            "Spam/Quảng cáo",
+            "Quấy rối",
+            "Ngôn từ xúc phạm",
+            "Khác"
+        };
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Báo cáo cuộc trò chuyện")
+                .setMessage("Báo cáo cuộc trò chuyện với " + otherName)
+                .setItems(reasons, (dialog, which) -> {
+                    String reason = reasons[which];
+                    if (which == reasons.length - 1) {
+                        // "Khác" - show input dialog
+                        showCustomReportChatDialog(reason);
+                    } else {
+                        showReportChatDescriptionDialog(reason);
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void showReportChatDescriptionDialog(String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etDescription = dialogView.findViewById(R.id.et_custom_reason);
+        etDescription.setHint("Mô tả thêm về vấn đề (tùy chọn)");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Báo cáo: " + reason)
+                .setMessage("Cuộc trò chuyện với " + otherName)
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String description = etDescription.getText().toString().trim();
+                    submitChatReport(reason, description);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void showCustomReportChatDialog(String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etCustomReason = dialogView.findViewById(R.id.et_custom_reason);
+        etCustomReason.setHint("Mô tả chi tiết lý do báo cáo");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Lý do báo cáo khác")
+                .setMessage("Cuộc trò chuyện với " + otherName)
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String customReason = etCustomReason.getText().toString().trim();
+                    if (customReason.isEmpty()) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập lý do báo cáo", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    submitChatReport(reason, customReason);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void submitChatReport(String reason, String description) {
+        Call<ApiResponse> call = chatApiService.reportChatRoom(roomId, myId, reason, description);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (!isAdded() || getContext() == null) return;
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        Toast.makeText(requireContext(), "Đã gửi báo cáo thành công", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể gửi báo cáo", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi kết nối: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                Toast.makeText(requireContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void showReportUserDialog() {
+        String[] reasons = {
+            "Lừa đảo/Gian lận",
+            "Nội dung không phù hợp", 
+            "Spam/Quảng cáo",
+            "Quấy rối",
+            "Ngôn từ xúc phạm",
+            "Tài khoản giả mạo",
+            "Khác"
+        };
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Báo cáo người dùng")
+                .setMessage("Báo cáo người dùng: " + otherName)
+                .setItems(reasons, (dialog, which) -> {
+                    String reason = reasons[which];
+                    if (which == reasons.length - 1) {
+                        // "Khác" - show input dialog
+                        showCustomReportUserDialog(reason);
+                    } else {
+                        showReportUserDescriptionDialog(reason);
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void showReportUserDescriptionDialog(String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etDescription = dialogView.findViewById(R.id.et_custom_reason);
+        etDescription.setHint("Mô tả thêm về vấn đề (tùy chọn)");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Báo cáo: " + reason)
+                .setMessage("Người dùng: " + otherName)
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String description = etDescription.getText().toString().trim();
+                    submitUserReport(reason, description);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void showCustomReportUserDialog(String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etCustomReason = dialogView.findViewById(R.id.et_custom_reason);
+        etCustomReason.setHint("Mô tả chi tiết lý do báo cáo");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Lý do báo cáo khác")
+                .setMessage("Người dùng: " + otherName)
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String customReason = etCustomReason.getText().toString().trim();
+                    if (customReason.isEmpty()) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập lý do báo cáo", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    submitUserReport(reason, customReason);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void submitUserReport(String reason, String description) {
+        ApiService apiService = RetrofitClient.getApiService();
+        Call<ApiResponse> call = apiService.reportUserDetailed(myId, otherId, reason, description);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (!isAdded() || getContext() == null) return;
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        Toast.makeText(requireContext(), "Đã gửi báo cáo thành công", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể gửi báo cáo", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi kết nối: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                Toast.makeText(requireContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void showBlockUserDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Chặn người dùng")
+                .setMessage("Bạn có chắc chắn muốn chặn " + otherName + "? Bạn sẽ không nhận được tin nhắn từ người này nữa.")
+                .setPositiveButton("Chặn", (dialog, which) -> blockUser())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }      private void blockUser() {
+        // Validate user IDs first
+        if (myId == -1 || otherId == -1) {
+            Log.e(TAG, "Invalid user IDs - myId: " + myId + ", otherId: " + otherId);
+            Toast.makeText(getContext(), "Lỗi: Không thể xác định người dùng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (myId == otherId) {
+            Log.e(TAG, "Cannot block yourself - myId: " + myId + ", otherId: " + otherId);
+            Toast.makeText(getContext(), "Lỗi: Không thể chặn chính mình", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Log.d(TAG, "Blocking user - currentUserId: " + myId + ", targetUserId: " + otherId);
+        
+        ApiService apiService = RetrofitClient.getApiService();
+        
+        // Use Query-based endpoint (more reliable as it includes currentUserId)
+        Call<ApiResponse> call = apiService.blockUser(myId, otherId, new BlockUserRequest("Blocked from chat"));
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (!isAdded() || getContext() == null) return;
+                handleChatBlockResponse(response);
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                
+                Log.e(TAG, "Block user failed", t);
+                Toast.makeText(getContext(), "Lỗi khi chặn người dùng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void handleChatBlockResponse(Response<ApiResponse> response) {
+        if (response.isSuccessful() && response.body() != null) {
+            ApiResponse apiResponse = response.body();            if (apiResponse.isSuccess()) {
+                // Add to blocked users list
+                BlockedUserFilter.getInstance(getContext()).addBlockedUser(otherId);
+                
+                Toast.makeText(requireContext(), "Đã chặn người dùng thành công", Toast.LENGTH_SHORT).show();
+                // Navigate back
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            } else {
+                String errorMsg = apiResponse.getMessage();
+                if (errorMsg == null || errorMsg.isEmpty()) {
+                    errorMsg = "Không thể chặn người dùng";
+                }
+                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show();
+                Log.w(TAG, "Block user failed: " + errorMsg);
+            }
+        } else {
+            // Handle HTTP error codes
+            String errorMessage;
+            switch (response.code()) {
+                case 403:
+                    errorMessage = "Không có quyền thực hiện hành động này.\n\nCó thể do backend chưa hỗ trợ tính năng chặn người dùng.\nVui lòng liên hệ hỗ trợ.";
+                    break;
+                case 404:
+                    errorMessage = "Không tìm thấy người dùng này.";
+                    break;
+                case 400:
+                    errorMessage = "Yêu cầu không hợp lệ.\nCó thể bạn đã chặn người dùng này trước đó.";
+                    break;
+                case 409:
+                    errorMessage = "Người dùng đã được chặn trước đó.";
+                    break;
+                case 500:
+                    errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
+                    break;
+                default:
+                    errorMessage = "Không thể chặn người dùng.\nMã lỗi: " + response.code();
+            }
+            
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();
+            Log.w(TAG, "Block user HTTP error: " + response.code() + " - " + response.message());
+        }
+    }
+    
+    private void handleChatBlockFailure(Throwable t) {
+        Log.e(TAG, "Error blocking user", t);
+        String errorMessage = "Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.";
+        if (t.getMessage() != null && !t.getMessage().isEmpty()) {
+            errorMessage += "\nChi tiết: " + t.getMessage();
+        }
+        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();
+    }
+    
+    /**
      * Show progress bar
      */
     private void showProgress() {
@@ -1067,5 +1407,63 @@ public class ChatFragment extends Fragment {
                 imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
             }
         }
+    }    /**
+     * Check if current user is blocked by the other user or vice versa
+     */
+    private void checkBlockStatus() {
+        if (hasCheckedBlockStatus) return;
+        
+        Log.d(TAG, "Checking block status between users: " + myId + " and " + otherId);
+        
+        // Use BlockedUserFilter to check if user is blocked
+        BlockedUserFilter filter = BlockedUserFilter.getInstance(getContext());
+        
+        // First refresh the blocked users list, then check
+        filter.refreshBlockedUsers(new BlockedUserFilter.RefreshCallback() {
+            @Override
+            public void onComplete(boolean success) {
+                if (!isAdded() || getContext() == null) return;
+                
+                hasCheckedBlockStatus = true;
+                
+                // Check if the other user is in our blocked list
+                isBlockedUser = filter.isUserBlocked(otherId);
+                Log.d(TAG, "Block status check result: " + isBlockedUser);
+                
+                if (isBlockedUser) {
+                    showBlockedUserMessage();
+                } else {
+                    // Continue with normal chat loading
+                    continueInitChatRoom();
+                }
+            }
+        });    }
+    
+    /**
+     * Show message when user is blocked
+     */
+    private void showBlockedUserMessage() {        // Hide chat input
+        try {
+            View etMessage = getView().findViewById(R.id.etMessage);
+            View btnSend = getView().findViewById(R.id.btnSend);
+            View btnAttachment = getView().findViewById(R.id.btnAttachment);
+            
+            if (etMessage != null) etMessage.setVisibility(View.GONE);
+            if (btnSend != null) btnSend.setVisibility(View.GONE);
+            if (btnAttachment != null) btnAttachment.setVisibility(View.GONE);
+        } catch (Exception e) {
+            Log.w(TAG, "Could not hide chat input", e);
+        }
+          // Show blocked message
+        messageList.clear();
+        ChatMessage blockedMessage = new ChatMessage();
+        blockedMessage.setContent("⚠️ Cuộc trò chuyện này không khả dụng do một trong hai người dùng đã bị chặn.");
+        blockedMessage.setType("SYSTEM");
+        blockedMessage.setSenderId(-1L); // System message
+        messageList.add(blockedMessage);
+        
+        chatAdapter.notifyDataSetChanged();
+        
+        Toast.makeText(getContext(), "Không thể nhắn tin với người dùng này", Toast.LENGTH_LONG).show();
     }
 }

@@ -2,6 +2,7 @@ package com.example.ok.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class SessionManager {
     private SharedPreferences sharedPreferences;
@@ -14,6 +15,30 @@ public class SessionManager {
     public SessionManager(Context context) {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
+        
+        // Migrate data from old SharedPreferences if needed
+        migrateFromOldPreferences(context);
+    }
+    
+    private void migrateFromOldPreferences(Context context) {
+        // Check if we need to migrate from old UserPrefs
+        if (getUserId() == 0) {
+            SharedPreferences oldPrefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            long oldUserId = oldPrefs.getLong("userId", 0);
+            boolean oldIsLoggedIn = oldPrefs.getBoolean("isLoggedIn", false);
+            
+            if (oldUserId != 0 && oldIsLoggedIn) {
+                Log.d("SessionManager", "Migrating user data from old preferences");
+                Log.d("SessionManager", "Old userId: " + oldUserId + ", isLoggedIn: " + oldIsLoggedIn);
+                
+                // Migrate the data
+                saveUserId(oldUserId);
+                editor.putBoolean(KEY_IS_LOGGED_IN, oldIsLoggedIn);
+                editor.apply();
+                
+                Log.d("SessionManager", "Migration complete - New userId: " + getUserId());
+            }
+        }
     }
 
     public void saveToken(String token) {

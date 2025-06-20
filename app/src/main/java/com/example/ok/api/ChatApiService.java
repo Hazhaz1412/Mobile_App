@@ -97,14 +97,15 @@ public interface ChatApiService {    /**
     Call<ApiResponse> blockChatRoom(
             @Path("chatRoomId") Long chatRoomId,
             @Path("userId") Long userId);
-    
-    /**
+      /**
      * Report a chat room
      */
     @PUT("api/chat/rooms/{chatRoomId}/report/{userId}")
     Call<ApiResponse> reportChatRoom(
             @Path("chatRoomId") Long chatRoomId,
-            @Path("userId") Long userId);
+            @Path("userId") Long userId,
+            @Query("reason") String reason,
+            @Query("description") String description);
     
     /**
      * Unblock a chat room

@@ -112,9 +112,7 @@
                         android:minLines="3"
                         android:maxLines="5"
                         android:gravity="top" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
+                </com.google.android.material.textfield.TextInputLayout>                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp">
@@ -126,6 +124,14 @@
                         android:hint="Giá bán (VNĐ) *"
                         android:inputType="numberDecimal" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <CheckBox
+                    android:id="@+id/cb_negotiable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Có thể thương lượng giá"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:layout_width="match_parent"

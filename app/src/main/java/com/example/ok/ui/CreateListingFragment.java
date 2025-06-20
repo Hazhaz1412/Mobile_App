@@ -126,10 +126,9 @@ import java.util.concurrent.Executors;
 public class CreateListingFragment extends Fragment implements LocationListener {
 
     private static final int REQUEST_IMAGE_PICK = 1001;
-    private static final int REQUEST_LOCATION_PERMISSION = 1002;
-
-    private EditText etTitle, etDescription, etPrice, etLocation, etTags;
+    private static final int REQUEST_LOCATION_PERMISSION = 1002;    private EditText etTitle, etDescription, etPrice, etLocation, etTags;
     private Spinner spCategory, spCondition;
+    private CheckBox cbNegotiable; // Add negotiable checkbox
     private Button btnSelectImages, btnGetLocation, btnPreview, btnSubmit;
     private RecyclerView rvImagePreview;
     private ImagePreviewAdapter imageAdapter;
@@ -300,9 +299,7 @@ public class CreateListingFragment extends Fragment implements LocationListener 
             imageAdapter.notifyDataSetChanged();
             updateImageCountText();
         }
-    }
-
-    private void initViews(View view) {
+    }    private void initViews(View view) {
         etTitle = view.findViewById(R.id.et_title);
         etDescription = view.findViewById(R.id.et_description);
         etPrice = view.findViewById(R.id.et_price);
@@ -311,6 +308,7 @@ public class CreateListingFragment extends Fragment implements LocationListener 
 
         spCategory = view.findViewById(R.id.sp_category);
         spCondition = view.findViewById(R.id.sp_condition);
+        cbNegotiable = view.findViewById(R.id.cb_negotiable); // Add this line
 
         btnSelectImages = view.findViewById(R.id.btn_select_images);
         btnGetLocation = view.findViewById(R.id.btn_get_location);
@@ -831,11 +829,10 @@ public class CreateListingFragment extends Fragment implements LocationListener 
         int conditionPosition = spCondition.getSelectedItemPosition();
         if (conditionPosition > 0) {
             request.setConditionId(conditions.get(conditionPosition - 1).getId());
-        }
-
-        request.setLocationText(etLocation.getText().toString().trim());
+        }        request.setLocationText(etLocation.getText().toString().trim());
         request.setLatitude(currentLatitude);
         request.setLongitude(currentLongitude);
+        request.setIsNegotiable(cbNegotiable.isChecked()); // Add negotiable field
 
         String tagsText = etTags.getText().toString().trim();
         if (!tagsText.isEmpty()) {

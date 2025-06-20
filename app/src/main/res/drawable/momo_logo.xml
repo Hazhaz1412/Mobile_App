@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="40dp"
+    android:viewportWidth="100"
+    android:viewportHeight="40">
+    
+    <!-- Background Pink Rectangle -->
+    <path
+        android:fillColor="#D82D8B"
+        android:pathData="M0,0 L100,0 L100,40 L0,40 Z" />
+    
+    <!-- Letter M (first) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,10 L25,10 L30,18 L35,10 L40,10 L40,30 L35,30 L35,18 L30,26 L25,18 L25,30 L20,30 Z" />
+    
+    <!-- Letter o (first) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,20 A5,5 0 1 1 55,20 A5,5 0 1 1 45,20" />
+    
+    <!-- Letter M (second) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,10 L65,10 L70,18 L75,10 L80,10 L80,30 L75,30 L75,18 L70,26 L65,18 L65,30 L60,30 Z" />
+    
+    <!-- Letter o (second) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,20 A5,5 0 1 1 95,20 A5,5 0 1 1 85,20" />
+</vector>

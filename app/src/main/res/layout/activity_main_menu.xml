@@ -60,7 +60,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Trang chủ"
+                    android:text="@string/trang_ch"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:gravity="center" />
@@ -87,7 +87,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bài đăng"
+                    android:text="@string/b_i_ng"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:gravity="center" />
@@ -116,7 +116,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chat"
+                    android:text="@string/chat"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:gravity="center" />
@@ -136,7 +136,7 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@drawable/customwhitebutton"
-                    android:drawableTop="@drawable/ic_user"
+                    android:drawableTop="@drawable/usermenu"
                     android:text=""
                     android:padding="8dp"
                     android:gravity="center" />
@@ -144,7 +144,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tài khoản"
+                    android:text="@string/t_i_kho_n"
                     android:textSize="12sp"
                     android:textColor="#000000"
                     android:gravity="center" />

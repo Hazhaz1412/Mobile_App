@@ -14,6 +14,7 @@ public class UpdateListingRequest {
     private BigDecimal longitude;
     private String status;
     private List<String> tags;
+    private Boolean isNegotiable; // Add negotiable field
 
     // Constructors
     public UpdateListingRequest() {}
@@ -48,4 +49,7 @@ public class UpdateListingRequest {
 
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
+
+    public Boolean getIsNegotiable() { return isNegotiable; }
+    public void setIsNegotiable(Boolean isNegotiable) { this.isNegotiable = isNegotiable; }
 }

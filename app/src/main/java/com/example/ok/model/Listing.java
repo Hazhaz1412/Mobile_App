@@ -29,6 +29,7 @@ public class Listing {
     private List<String> imageUrls;
     private String primaryImageUrl;
     private List<String> tags;
+    private Boolean isNegotiable; // Add negotiable field
 
     // Constructors
     public Listing() {}
@@ -89,13 +90,25 @@ public class Listing {
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 
     public List<String> getImageUrls() { return imageUrls; }
-    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
-
-    public String getPrimaryImageUrl() { return primaryImageUrl; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }    public String getPrimaryImageUrl() { return primaryImageUrl; }
     public void setPrimaryImageUrl(String primaryImageUrl) { this.primaryImageUrl = primaryImageUrl; }
+    
+    // Compatibility method for adapters
+    public String getImageUrl() { 
+        if (primaryImageUrl != null && !primaryImageUrl.isEmpty()) {
+            return primaryImageUrl;
+        }
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            return imageUrls.get(0);
+        }
+        return null;
+    }
 
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
+
+    public Boolean getIsNegotiable() { return isNegotiable; }
+    public void setIsNegotiable(Boolean isNegotiable) { this.isNegotiable = isNegotiable; }
 
     public Integer getViews() {
         return viewCount != null ? viewCount : 0;

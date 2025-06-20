@@ -96,11 +96,11 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ListingV
         private ImageView ivPrimary;
         private TextView tvTitle;
         private TextView tvPrice;
-        private TextView tvLocation;
-        private TextView tvCategory;
+        private TextView tvLocation;        private TextView tvCategory;
         private TextView tvCondition;
         private TextView tvViews;
         private TextView tvStatus;
+        private TextView tvNegotiable; // Add negotiable indicator
 
         public ListingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -113,6 +113,7 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ListingV
             tvCondition = itemView.findViewById(R.id.tv_condition);
             tvViews = itemView.findViewById(R.id.tv_views);
             tvStatus = itemView.findViewById(R.id.tv_status);
+            tvNegotiable = itemView.findViewById(R.id.tv_negotiable); // Add this line
 
             itemView.setOnClickListener(v -> {
                 if (listener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
@@ -173,6 +174,15 @@ public class ListingAdapter extends RecyclerView.Adapter<ListingAdapter.ListingV
                     String status = listing.getStatus() != null ? listing.getStatus() : "AVAILABLE";
                     tvStatus.setText(getStatusText(status));
                     tvStatus.setTextColor(getStatusColor(status));
+                }
+                
+                // Set negotiable indicator
+                if (tvNegotiable != null) {
+                    if (listing.getIsNegotiable() != null && listing.getIsNegotiable()) {
+                        tvNegotiable.setVisibility(View.VISIBLE);
+                    } else {
+                        tvNegotiable.setVisibility(View.GONE);
+                    }
                 }
 
                 // Load primary image - SỬA CHÍNH CHỖ NÀY

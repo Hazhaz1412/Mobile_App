@@ -164,21 +164,30 @@ public class ChatMessage {
         if (timestamp != null && timestamp > 0) {
             return new Date(timestamp);
         }
-        
-        // Fall back to createdAt string parsing
+          // Fall back to createdAt string parsing
         if (createdAt != null && !createdAt.isEmpty()) {
             try {
                 // Parse ISO datetime string: "2025-06-10T12:56:44.272811"
-                java.time.LocalDateTime localDateTime = java.time.LocalDateTime.parse(createdAt);
-                java.time.ZonedDateTime zonedDateTime = localDateTime.atZone(java.time.ZoneId.systemDefault());
-                return Date.from(zonedDateTime.toInstant());
+                // Use SimpleDateFormat for API level compatibility
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", java.util.Locale.getDefault());
+                return sdf.parse(createdAt);
             } catch (Exception e) {
-                // If parsing fails, return current time
-                return new Date();
+                try {
+                    // Try alternative format without microseconds
+                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                    return sdf2.parse(createdAt);
+                } catch (Exception e2) {
+                    // If parsing fails, return current time
+                    return new Date();
+                }
             }
         }
-        
-        // If both are null, return current time
+          // If both are null, return current time
         return new Date();
+    }
+    
+    // Helper method to get ID safely
+    public long getIdSafely() {
+        return id != null ? id : 0L;
     }
 }

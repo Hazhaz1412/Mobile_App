@@ -17,10 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Nhập lý do báo cáo..."
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etCustomReason"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_custom_reason"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="3"

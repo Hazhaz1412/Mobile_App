@@ -4,7 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -52,17 +59,19 @@ public class RetrofitClient {
                     .connectTimeout(60, TimeUnit.SECONDS)
                     .readTimeout(60, TimeUnit.SECONDS)
                     .writeTimeout(60, TimeUnit.SECONDS)
-                    .build();
-
-            retrofit = new Retrofit.Builder()
+                    .build();            retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(okHttpClient)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
                     .build();
         }
         return retrofit;    }    public static ApiService getApiService() {
         checkInitialized();
         return getClient().create(ApiService.class);
+    }
+    
+    public static String getBaseUrl() {
+        return BASE_URL;
     }
     
     // THÊM METHOD NÀY NẾU CHƯA CÓ
@@ -126,5 +135,39 @@ public class RetrofitClient {
             
             return response;
         }
+    }
+    
+    private static Gson createGson() {
+        return new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS")
+                .registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
+                    try {
+                        String dateString = json.getAsString();
+                        
+                        // Handle different date formats from backend
+                        SimpleDateFormat[] formats = {
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS", Locale.US),
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                        };
+                        
+                        for (SimpleDateFormat format : formats) {
+                            try {
+                                return format.parse(dateString);
+                            } catch (Exception e) {
+                                // Try next format
+                            }
+                        }
+                        
+                        Log.w(TAG, "Could not parse date: " + dateString);
+                        return new Date(); // Return current date as fallback
+                        
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing date", e);
+                        return new Date(); // Return current date as fallback
+                    }
+                })
+                .create();
     }
 }

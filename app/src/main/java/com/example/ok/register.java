@@ -24,6 +24,7 @@ import com.example.ok.model.GoogleAuthRequest;
 import com.example.ok.model.JwtAuthResponse;
 import com.example.ok.model.RegisterRequest;
 import com.example.ok.util.JwtUtils;
+import com.example.ok.util.SessionManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -36,12 +37,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class register extends AppCompatActivity {
-
-    private EditText etEmail, etPassword, etConfirmPassword, etDisplayName;
+public class register extends AppCompatActivity {    private EditText etEmail, etPassword, etConfirmPassword, etDisplayName;
     private Button btnRegister, ggregis;
     private ApiService apiService;
     private ProgressDialog progressDialog;
+    private SessionManager sessionManager;
 
     // Google Sign-In
     private static final int RC_SIGN_IN = 9001;
@@ -67,11 +67,10 @@ public class register extends AppCompatActivity {
         ggregis = findViewById(R.id.ggregis);
         TextView login = findViewById(R.id.loginline);
         TextView firstLine = findViewById(R.id.optionLogin3);
-        TextView secondLine = findViewById(R.id.optionLogin4);
-
-        // Initialize RetrofitClient before using API services
+        TextView secondLine = findViewById(R.id.optionLogin4);        // Initialize RetrofitClient before using API services
         RetrofitClient.init(this);
         apiService = RetrofitClient.getApiService();
+        sessionManager = new SessionManager(this);
 
         // Initialize progress dialog
         progressDialog = new ProgressDialog(this);
@@ -217,9 +216,7 @@ public class register extends AppCompatActivity {
                 Toast.makeText(register.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    private void saveUserSession(Object userIdObj) {
+    }    private void saveUserSession(Object userIdObj) {
         long userId;
 
         if (userIdObj instanceof Integer) {
@@ -240,6 +237,15 @@ public class register extends AppCompatActivity {
             return;
         }
 
+        // Use SessionManager to save user session
+        sessionManager.saveUserId(userId);
+        
+        Log.d("REGISTER", "=== USER SESSION SAVED ===");
+        Log.d("REGISTER", "UserId saved: " + userId);
+        Log.d("REGISTER", "SessionManager getUserId(): " + sessionManager.getUserId());
+        Log.d("REGISTER", "=== END SESSION SAVE ===");
+        
+        // Keep the old SharedPreferences for backward compatibility (if needed elsewhere)
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putLong("userId", userId);
@@ -272,11 +278,17 @@ public class register extends AppCompatActivity {
                 }
             });
         }
-    }
-
-    // Method to decode JWT token to get userId
+    }    // Method to decode JWT token to get userId
     private Long getUserIdFromToken(String token) {
         return JwtUtils.getUserIdFromToken(token);
+    }
+
+    private void saveUserSession(Long userId) {
+        if (userId != null) {
+            saveUserSession((Object) userId);
+        } else {
+            Log.e("REGISTER", "UserId is null, cannot save session");
+        }
     }
 
     // ...existing code...

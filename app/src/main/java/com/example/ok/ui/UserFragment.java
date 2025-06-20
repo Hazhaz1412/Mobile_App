@@ -57,14 +57,12 @@ public class UserFragment extends Fragment {
     private static final String ARG_IS_CURRENT_USER = "isCurrentUser";
 
     private Long userId;
-    private boolean isCurrentUser;
-
-    // UI Components
+    private boolean isCurrentUser;    // UI Components
     private ImageView profileImage;
     private ImageButton btnChangePhoto;
     private TextView tvDisplayName, tvBio, tvEmail, tvPhone, tvRatingCount;
     private RatingBar ratingBar;
-    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout, btnNotificationSettings;
+    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout, btnNotificationSettings, btnPaymentHistory, btnOfferManagement, btnMyOffers;
     private View accountActionsCard;
 
     // API Service
@@ -127,9 +125,7 @@ public class UserFragment extends Fragment {
         loadUserProfile();
 
         return view;
-    }
-
-    private void initViews(View view) {
+    }    private void initViews(View view) {
         profileImage = view.findViewById(R.id.profileImage);
         btnChangePhoto = view.findViewById(R.id.btnChangePhoto);
         tvDisplayName = view.findViewById(R.id.tvDisplayName);
@@ -140,20 +136,21 @@ public class UserFragment extends Fragment {
         ratingBar = view.findViewById(R.id.ratingBar);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnDeactivateAccount = view.findViewById(R.id.btnDeactivateAccount);
-        btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);
-        btnLogout = view.findViewById(R.id.btnLogout);
+        btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);        btnLogout = view.findViewById(R.id.btnLogout);
         btnNotificationSettings = view.findViewById(R.id.btnNotificationSettings);
+        btnPaymentHistory = view.findViewById(R.id.btnPaymentHistory);
+        btnOfferManagement = view.findViewById(R.id.btnOfferManagement);
+        btnMyOffers = view.findViewById(R.id.btnMyOffers);
         accountActionsCard = view.findViewById(R.id.accountActionsCard);
 
         // Update UI based on whether viewing own profile or other user's profile
         updateUIForViewMode();
-    }
-
-    private void updateUIForViewMode() {
+    }    private void updateUIForViewMode() {
         if (isCurrentUser) {
             // Viewing own profile
             btnChangePhoto.setVisibility(View.VISIBLE);
             btnEditProfile.setVisibility(View.VISIBLE);
+            btnPaymentHistory.setVisibility(View.VISIBLE);
             accountActionsCard.setVisibility(View.VISIBLE);
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.VISIBLE);
@@ -165,6 +162,7 @@ public class UserFragment extends Fragment {
             // Viewing someone else's profile
             btnChangePhoto.setVisibility(View.GONE);
             btnEditProfile.setVisibility(View.GONE);
+            btnPaymentHistory.setVisibility(View.GONE);
             accountActionsCard.setVisibility(View.GONE);
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.GONE);
@@ -195,16 +193,42 @@ public class UserFragment extends Fragment {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutConfirmation());
         }
-        
-        // Notification settings button
+          // Notification settings button
         if (btnNotificationSettings != null) {
             btnNotificationSettings.setOnClickListener(v -> navigateToNotificationSettings());
         }
-    }
-
-    private void navigateToNotificationSettings() {
+          // Payment history button
+        if (btnPaymentHistory != null) {
+            btnPaymentHistory.setOnClickListener(v -> navigateToPaymentHistory());
+        }
+          // Offer management button
+        if (btnOfferManagement != null) {
+            btnOfferManagement.setOnClickListener(v -> navigateToOfferManagement());
+        }
+        
+        // My offers button
+        if (btnMyOffers != null) {
+            btnMyOffers.setOnClickListener(v -> navigateToMyOffers());
+        }
+    }    private void navigateToNotificationSettings() {
         if (getActivity() instanceof MainMenu) {
             ((MainMenu) getActivity()).navigateToNotificationSettings();
+        }
+    }
+      private void navigateToPaymentHistory() {
+        if (getActivity() instanceof MainMenu) {
+            ((MainMenu) getActivity()).navigateToPaymentHistory();
+        }
+    }
+      private void navigateToOfferManagement() {
+        if (getActivity() instanceof MainMenu) {
+            ((MainMenu) getActivity()).navigateToOfferManagement();
+        }
+    }
+    
+    private void navigateToMyOffers() {
+        if (getActivity() instanceof MainMenu) {
+            ((MainMenu) getActivity()).navigateToMyOffers();
         }
     }
 

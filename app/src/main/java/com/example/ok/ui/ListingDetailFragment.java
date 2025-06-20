@@ -1,5 +1,6 @@
 package com.example.ok.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -57,6 +58,7 @@ public class ListingDetailFragment extends Fragment {
     private TextView tvSellerName, tvSellerJoinDate;
     private RatingBar rbSellerRating;
     private Button btnContact, btnFavorite, btnShare, btnReport, btnBuy;
+    private Button btnMakeOffer; // Add offer button
     private FloatingActionButton fabEdit;
     private LinearLayout layoutSellerInfo, layoutActions, layoutLoading;
     private ScrollView scrollViewContent;
@@ -154,16 +156,15 @@ public class ListingDetailFragment extends Fragment {
         tvSellerJoinDate = view.findViewById(R.id.tvSellerJoinDate);
         rbSellerRating = view.findViewById(R.id.rbSellerRating);
 
-        // Action buttons
         layoutActions = view.findViewById(R.id.layoutActions);
         btnContact = view.findViewById(R.id.btnContact);
         btnFavorite = view.findViewById(R.id.btnFavorite);
         btnShare = view.findViewById(R.id.btnShare);
         btnReport = view.findViewById(R.id.btnReport);
         btnBuy = view.findViewById(R.id.btnBuy);
+        btnMakeOffer = view.findViewById(R.id.btnMakeOffer);
         fabEdit = view.findViewById(R.id.fabEdit);
 
-        // Back button
         ImageButton btnBack = view.findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> navigateBack());
     }
@@ -186,9 +187,16 @@ public class ListingDetailFragment extends Fragment {
 
         // View seller profile
         layoutSellerInfo.setOnClickListener(v -> viewSellerProfile());
+        
+        // Also make seller name and avatar clickable individually
+        tvSellerName.setOnClickListener(v -> viewSellerProfile());
+        ivSellerAvatar.setOnClickListener(v -> viewSellerProfile());
 
         // Buy now
         btnBuy.setOnClickListener(v -> buyListing());
+        
+        // Make offer
+        btnMakeOffer.setOnClickListener(v -> showMakeOfferDialog());
     }
 
     private void loadListingDetail(long listingId) {
@@ -263,17 +271,14 @@ public class ListingDetailFragment extends Fragment {
     private void displayListingInfo() {
         if (listing == null) return;
 
-        // Basic info
         tvTitle.setText(listing.getTitle());
 
-        // Format price
         DecimalFormat formatter = new DecimalFormat("#,###");
         tvPrice.setText(formatter.format(listing.getPrice()) + " VNĐ");
 
         tvDescription.setText(listing.getDescription());
         tvLocation.setText(listing.getLocationText() != null ? listing.getLocationText() : "Không xác định");
 
-        // Views and date
         tvViews.setText(listing.getViews() + " lượt xem");
 
         try {
@@ -284,12 +289,10 @@ public class ListingDetailFragment extends Fragment {
                 tvCreatedDate.setText("Đăng ngày " + dateFormat.format(createdDate));
             }
         } catch (Exception e) {
-            // Fallback nếu không parse được date
             tvCreatedDate.setText("Đăng gần đây");
             Log.d(TAG, "Could not parse date: " + listing.getCreatedAt());
         }
 
-        // Category and condition
         if (listing.getCategory() != null) {
             tvCategory.setText(listing.getCategory().getName());
         }
@@ -298,14 +301,11 @@ public class ListingDetailFragment extends Fragment {
             tvCondition.setText(listing.getCondition().getName());
         }
 
-        // Status
         tvStatus.setText(listing.getStatus());
         updateStatusColor();
 
-        // Tags
         displayTags();
 
-        // Images
         if (listing.getImages() != null && !listing.getImages().isEmpty()) {
             imageUrls.clear();
             for (ListingImage image : listing.getImages()) {
@@ -342,7 +342,7 @@ public class ListingDetailFragment extends Fragment {
 
     private void setupImageGallery() {
         if (imageUrls.isEmpty()) {
-            imageUrls.add(""); // Empty URL for placeholder
+            imageUrls.add("");
         }
 
         DetailImageAdapter imageAdapter = new DetailImageAdapter(requireContext(), imageUrls);
@@ -402,31 +402,28 @@ public class ListingDetailFragment extends Fragment {
                         displaySellerInfo();
                     } else {
                         Log.d(TAG, "Seller API response was not successful");
-                        displaySellerInfo(); // Still try to display what we have
+                        displaySellerInfo();
                     }
                 } else {
                     Log.e(TAG, "Failed to load seller info, HTTP status: " + response.code());
-                    displaySellerInfo(); // Fallback to other data sources
+                    displaySellerInfo();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserProfileResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Error loading seller info", t);
-                // Even when the API call fails, try to display whatever seller info we have
                 displaySellerInfo();
             }
         });
     }
 
     private void displaySellerInfo() {
-        // Log để kiểm tra dữ liệu
         if (listing != null) {
             Log.d(TAG, "userDisplayName from listing: " + listing.getUserDisplayName() + 
                    ", userId: " + listing.getUserId());
         }
         
-        // Ưu tiên hiển thị seller từ API, fallback sang userDisplayName nếu không có
         if (seller != null && seller.getDisplayName() != null && !seller.getDisplayName().isEmpty()) {
             Log.d(TAG, "Displaying seller from API data: " + seller.getDisplayName());
             tvSellerName.setText(seller.getDisplayName());
@@ -486,9 +483,7 @@ public class ListingDetailFragment extends Fragment {
         }
 
         rbSellerRating.setRating(4.5f);
-    }
-
-    private void checkOwnership() {
+    }    private void checkOwnership() {
         SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
         long currentUserId = prefs.getLong("userId", -1);
 
@@ -497,14 +492,26 @@ public class ListingDetailFragment extends Fragment {
 
             if (isCurrentUserListing) {
                 btnContact.setVisibility(View.GONE);
+                btnBuy.setVisibility(View.GONE);
+                btnMakeOffer.setVisibility(View.GONE);
                 fabEdit.setVisibility(View.VISIBLE);
                 layoutSellerInfo.setVisibility(View.GONE);
             } else {
                 btnContact.setVisibility(View.VISIBLE);
                 fabEdit.setVisibility(View.GONE);
                 layoutSellerInfo.setVisibility(View.VISIBLE);
+                btnBuy.setVisibility(View.VISIBLE);
+                if (listing.getIsNegotiable() != null && listing.getIsNegotiable()) {
+                    btnMakeOffer.setVisibility(View.VISIBLE);
+                } else {
+                    btnMakeOffer.setVisibility(View.GONE);
+                    addNonNegotiableInfo();
+                }
             }
         }
+    }
+
+    private void addNonNegotiableInfo() {
     }
 
     private void updateStatusColor() {
@@ -541,7 +548,7 @@ public class ListingDetailFragment extends Fragment {
                 .setTitle("Liên hệ người bán")
                 .setMessage("Bạn muốn liên hệ với " + seller.getDisplayName() + " qua:")
                 .setPositiveButton("Tin nhắn", (dialog, which) -> {
-                    // Get current user ID
+
                     SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
                     long currentUserId = prefs.getLong("userId", -1);
                     
@@ -558,7 +565,7 @@ public class ListingDetailFragment extends Fragment {
                     args.putLong("listingId", listingId);
                     
                     ChatFragment chatFragment = ChatFragment.newInstance(
-                            -1, // roomId will be created
+                            -1,
                             currentUserId,
                             seller.getId(),
                             seller.getDisplayName(),
@@ -567,9 +574,7 @@ public class ListingDetailFragment extends Fragment {
                     
                     ((MainMenu) requireActivity()).replaceFragment(chatFragment);
                 })
-                .setNeutralButton("Gọi điện", (dialog, which) -> {
-                    Toast.makeText(requireContext(), "Tính năng gọi điện đang phát triển", Toast.LENGTH_SHORT).show();
-                })
+
                 .setNegativeButton("Hủy", null)
                 .show();
     }
@@ -606,17 +611,120 @@ public class ListingDetailFragment extends Fragment {
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Sản phẩm: " + listing.getTitle());
 
         startActivity(Intent.createChooser(shareIntent, "Chia sẻ sản phẩm"));
+    }    private void reportListing() {
+        if (listing == null) {
+            Toast.makeText(requireContext(), "Không thể báo cáo tin đăng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Get current user ID from preferences
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        long currentUserId = prefs.getLong("user_id", -1);
+        
+        if (currentUserId == -1) {
+            Toast.makeText(requireContext(), "Vui lòng đăng nhập để báo cáo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        showReportListingDialog(currentUserId);
     }
+    
+    private void showReportListingDialog(long reporterId) {
+        String[] reasons = {
+            "Lừa đảo/Gian lận",
+            "Nội dung không phù hợp", 
+            "Spam/Quảng cáo",
+            "Hàng giả/Không như mô tả",
+            "Thao túng giá cả",
+            "Tin đăng trùng lặp",
+            "Khác"
+        };
 
-    private void reportListing() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Báo cáo tin đăng")
-                .setMessage("Bạn có chắc muốn báo cáo tin đăng này?")
-                .setPositiveButton("Báo cáo", (dialog, which) -> {
-                    Toast.makeText(requireContext(), "Đã gửi báo cáo", Toast.LENGTH_SHORT).show();
+                .setMessage("Tin đăng: " + listing.getTitle())
+                .setItems(reasons, (dialog, which) -> {
+                    String reason = reasons[which];
+                    if (which == reasons.length - 1) {
+                        // "Khác" - show input dialog
+                        showCustomReportListingDialog(reporterId, "Khác");
+                    } else {
+                        showReportDescriptionDialog(reporterId, reason);
+                    }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+    
+    private void showReportDescriptionDialog(long reporterId, String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etDescription = dialogView.findViewById(R.id.et_custom_reason);
+        etDescription.setHint("Mô tả thêm về vấn đề (tùy chọn)");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Báo cáo: " + reason)
+                .setMessage("Tin đăng: " + listing.getTitle())
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String description = etDescription.getText().toString().trim();
+                    submitListingReport(reporterId, reason, description);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void showCustomReportListingDialog(long reporterId, String reason) {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_custom_report, null);
+        
+        EditText etCustomReason = dialogView.findViewById(R.id.et_custom_reason);
+        etCustomReason.setHint("Mô tả chi tiết lý do báo cáo");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Lý do báo cáo khác")
+                .setMessage("Tin đăng: " + listing.getTitle())
+                .setView(dialogView)
+                .setPositiveButton("Gửi báo cáo", (dialog, which) -> {
+                    String customReason = etCustomReason.getText().toString().trim();
+                    if (customReason.isEmpty()) {
+                        Toast.makeText(requireContext(), "Vui lòng nhập lý do báo cáo", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    submitListingReport(reporterId, reason, customReason);
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+    
+    private void submitListingReport(long reporterId, String reason, String description) {
+        Call<ApiResponse> call = apiService.reportListing(listing.getId(), reporterId, reason, description);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (!isAdded() || getContext() == null) return;
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        Toast.makeText(requireContext(), "Đã gửi báo cáo thành công", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể gửi báo cáo", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi kết nối: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                Toast.makeText(requireContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void editListing() {
@@ -624,22 +732,181 @@ public class ListingDetailFragment extends Fragment {
 
         // TODO: Navigate to edit listing fragment with data
         Toast.makeText(requireContext(), "Tính năng chỉnh sửa đang phát triển", Toast.LENGTH_SHORT).show();
-    }
-
-    private void viewSellerProfile() {
-        if (seller == null) return;
-
-        // TODO: Navigate to seller profile fragment
-        Toast.makeText(requireContext(), "Xem profile của " + seller.getDisplayName(), Toast.LENGTH_SHORT).show();
-    }
-
-    private void buyListing() {
+    }    private void viewSellerProfile() {
+        if (seller == null) {
+            Toast.makeText(requireContext(), "Không thể xem profile người bán", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if viewing own profile
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        long currentUserId = prefs.getLong("userId", -1);
+        
+        if (currentUserId == seller.getId()) {
+            // Navigate to own profile (if you have one)
+            Toast.makeText(requireContext(), "Đây là profile của bạn", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Navigate to other user profile
+        Bundle args = new Bundle();
+        args.putLong("userId", seller.getId());
+        args.putString("displayName", seller.getDisplayName());
+          try {
+            // Use a generic navigation or fall back to activity method
+            if (getActivity() instanceof MainMenu) {
+                MainMenu mainMenu = (MainMenu) getActivity();
+                mainMenu.navigateToOtherUserProfile(seller.getId(), seller.getDisplayName());
+            } else {
+                Toast.makeText(requireContext(), "Không thể mở profile người bán", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Navigation error", e);
+            
+            // Fallback: Use activity navigation if fragment navigation fails
+            if (getActivity() instanceof MainMenu) {
+                MainMenu mainMenu = (MainMenu) getActivity();
+                mainMenu.navigateToOtherUserProfile(seller.getId(), seller.getDisplayName());
+            } else {
+                Toast.makeText(requireContext(), "Không thể mở profile người bán", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }    private void buyListing() {
         if (listing == null) {
             Toast.makeText(requireContext(), "Không thể mua sản phẩm này", Toast.LENGTH_SHORT).show();
             return;
         }
-        // TODO: Thực hiện logic mua hàng hoặc gửi offer
-        Toast.makeText(requireContext(), "Tính năng mua đang phát triển", Toast.LENGTH_SHORT).show();
+        
+        // Check if user is trying to buy their own listing
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        long currentUserId = prefs.getLong("userId", -1);
+        
+        if (listing.getUserId() != null && currentUserId == listing.getUserId()) {
+            Toast.makeText(requireContext(), "Bạn không thể mua sản phẩm của chính mình", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if user already has a pending payment for this listing
+        checkPendingPaymentAndProceed(currentUserId);
+    }
+    
+    private void checkPendingPaymentAndProceed(long userId) {
+        ApiService apiService = RetrofitClient.getApiService();
+        Call<com.example.ok.model.Payment> call = apiService.getPendingPaymentForListing(userId, listing.getId());
+        
+        call.enqueue(new Callback<com.example.ok.model.Payment>() {
+            @Override
+            public void onResponse(Call<com.example.ok.model.Payment> call, Response<com.example.ok.model.Payment> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // User has a pending payment, redirect to payment screen with existing payment
+                    com.example.ok.model.Payment existingPayment = response.body();
+                    showPendingPaymentDialog(existingPayment);
+                } else {
+                    // No pending payment found, create new payment
+                    openPaymentScreen();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<com.example.ok.model.Payment> call, Throwable t) {
+                Log.e(TAG, "Error checking pending payment", t);
+                // On error, proceed with normal flow
+                openPaymentScreen();
+            }
+        });
+    }
+    
+    private void showPendingPaymentDialog(com.example.ok.model.Payment existingPayment) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Đơn hàng chưa thanh toán")
+                .setMessage("Bạn đã có đơn hàng chưa thanh toán cho sản phẩm này. " +
+                           "Bạn muốn tiếp tục thanh toán hay tạo đơn hàng mới?")
+                .setPositiveButton("Thanh toán đơn cũ", (dialog, which) -> {
+                    // Open payment screen with existing payment
+                    openPaymentScreenWithExistingPayment(existingPayment);
+                })
+                .setNegativeButton("Tạo đơn mới", (dialog, which) -> {
+                    // Create new payment
+                    openPaymentScreen();
+                })
+                .setNeutralButton("Hủy", null)
+                .show();
+    }
+    
+    private void openPaymentScreenWithExistingPayment(com.example.ok.model.Payment existingPayment) {
+        Intent paymentIntent = new Intent(requireActivity(), com.example.ok.ui.PaymentActivity.class);
+        
+        // Pass existing payment information
+        paymentIntent.putExtra("existingPaymentId", existingPayment.getId());
+        paymentIntent.putExtra("listingId", listing.getId());
+        paymentIntent.putExtra("listingTitle", listing.getTitle());
+        paymentIntent.putExtra("listingPrice", listing.getPrice() != null ? listing.getPrice().doubleValue() : 0.0);
+        paymentIntent.putExtra("listingImageUrl", 
+                listing.getImageUrls() != null && !listing.getImageUrls().isEmpty() ? 
+                listing.getImageUrls().get(0) : "");
+        
+        // Pass seller information
+        if (seller != null) {
+            paymentIntent.putExtra("sellerName", seller.getDisplayName());
+        } else if (listing.getUserDisplayName() != null) {
+            paymentIntent.putExtra("sellerName", listing.getUserDisplayName());
+        } else {
+            paymentIntent.putExtra("sellerName", "Người bán");
+        }
+        
+        // Pass existing payment details
+        paymentIntent.putExtra("paymentAmount", existingPayment.getAmount());
+        paymentIntent.putExtra("paymentStatus", existingPayment.getStatus());
+        paymentIntent.putExtra("paymentMethod", existingPayment.getPaymentMethodType());
+        
+        startActivity(paymentIntent);
+    }
+    
+    private void openPaymentScreen() {
+        Intent paymentIntent = new Intent(requireActivity(), com.example.ok.ui.PaymentActivity.class);
+          // Pass listing information to payment screen
+        paymentIntent.putExtra("listingId", listing.getId());
+        paymentIntent.putExtra("listingTitle", listing.getTitle());
+        paymentIntent.putExtra("listingPrice", listing.getPrice() != null ? listing.getPrice().doubleValue() : 0.0);
+        paymentIntent.putExtra("listingImageUrl", 
+                listing.getImageUrls() != null && !listing.getImageUrls().isEmpty() ? 
+                listing.getImageUrls().get(0) : "");
+        
+        // Pass seller information
+        if (seller != null) {
+            paymentIntent.putExtra("sellerName", seller.getDisplayName());
+        } else if (listing.getUserDisplayName() != null) {
+            paymentIntent.putExtra("sellerName", listing.getUserDisplayName());
+        } else {
+            paymentIntent.putExtra("sellerName", "Người bán");
+        }
+        
+        startActivityForResult(paymentIntent, 1001);
+    }
+    
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == 1001) { // Payment activity result
+            if (resultCode == android.app.Activity.RESULT_OK) {
+                // Payment successful
+                Toast.makeText(requireContext(), "Thanh toán thành công!", Toast.LENGTH_LONG).show();
+                
+                // Optionally update listing status or navigate somewhere
+                // For now, we'll just show a success message
+                showPaymentSuccessDialog();
+            }
+        }
+    }
+    
+    private void showPaymentSuccessDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Thanh toán thành công")
+                .setMessage("Đơn hàng của bạn đã được xử lý. Vui lòng liên hệ người bán để sắp xếp giao hàng.")
+                .setPositiveButton("Liên hệ người bán", (dialog, which) -> contactSeller())
+                .setNegativeButton("Đóng", null)
+                .show();
     }
 
     private void showLoadingState() {
@@ -666,5 +933,154 @@ public class ListingDetailFragment extends Fragment {
                 ((MainMenu) getActivity()).navigateToTab("home");
             }
         }
+    }
+
+    // ========== OFFER FUNCTIONALITY ==========
+      private void showMakeOfferDialog() {
+        if (listing == null) {
+            Toast.makeText(requireContext(), "Không thể tạo offer cho sản phẩm này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if user is trying to offer on their own listing
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        long currentUserId = prefs.getLong("userId", -1);
+        
+        if (listing.getUserId() != null && currentUserId == listing.getUserId()) {
+            Toast.makeText(requireContext(), "Bạn không thể đặt giá cho sản phẩm của chính mình", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create offer dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_make_offer, null);
+        
+        EditText etOfferAmount = dialogView.findViewById(R.id.etOfferAmount);
+        EditText etOfferMessage = dialogView.findViewById(R.id.etOfferMessage);
+        TextView tvListingPrice = dialogView.findViewById(R.id.tvListingPrice);
+        Button btnDiscount5 = dialogView.findViewById(R.id.btnDiscount5);
+        Button btnDiscount10 = dialogView.findViewById(R.id.btnDiscount10);
+        Button btnDiscount15 = dialogView.findViewById(R.id.btnDiscount15);
+        
+        // Show current listing price
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        double originalPrice = listing.getPrice().doubleValue();
+        tvListingPrice.setText("Giá hiện tại: " + formatter.format(originalPrice) + " VNĐ");
+        
+        // Setup quick discount buttons
+        btnDiscount5.setOnClickListener(v -> {
+            double discountedPrice = originalPrice * 0.95; // 5% discount
+            etOfferAmount.setText(String.valueOf((int)discountedPrice));
+            etOfferMessage.setText("Mong bạn có thể giảm 5% giá. Cảm ơn!");
+        });
+        
+        btnDiscount10.setOnClickListener(v -> {
+            double discountedPrice = originalPrice * 0.90; // 10% discount
+            etOfferAmount.setText(String.valueOf((int)discountedPrice));
+            etOfferMessage.setText("Hi vọng bạn có thể giảm 10% giá để tôi có thể mua ngay. Cảm ơn bạn!");
+        });
+        
+        btnDiscount15.setOnClickListener(v -> {
+            double discountedPrice = originalPrice * 0.85; // 15% discount
+            etOfferAmount.setText(String.valueOf((int)discountedPrice));
+            etOfferMessage.setText("Tôi rất thích sản phẩm này. Bạn có thể giảm 15% không? Tôi sẽ mua ngay!");
+        });
+        
+        builder.setView(dialogView)
+                .setTitle("Yêu cầu giảm giá")
+                .setPositiveButton("Gửi yêu cầu", null) // Set to null to override later
+                .setNegativeButton("Hủy", null);
+        
+        AlertDialog dialog = builder.create();
+        
+        // Override positive button to validate input
+        dialog.setOnShowListener(dialogInterface -> {
+            Button button = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(view -> {
+                String amountStr = etOfferAmount.getText().toString().trim();
+                String message = etOfferMessage.getText().toString().trim();
+                
+                if (amountStr.isEmpty()) {
+                    etOfferAmount.setError("Vui lòng nhập số tiền hoặc chọn tùy chọn giảm giá");
+                    return;
+                }
+                
+                try {
+                    double offerAmount = Double.parseDouble(amountStr);
+                    if (offerAmount <= 0) {
+                        etOfferAmount.setError("Số tiền phải lớn hơn 0");
+                        return;
+                    }
+                    
+                    if (offerAmount >= originalPrice) {
+                        etOfferAmount.setError("Giá đề xuất phải thấp hơn giá hiện tại");
+                        return;
+                    }
+                    
+                    // Add default message if empty
+                    if (message.trim().isEmpty()) {
+                        message = "Tôi muốn mua sản phẩm này với giá " + formatter.format(offerAmount) + " VNĐ.";
+                    }
+                    
+                    // Send offer
+                    sendOffer(currentUserId, offerAmount, message);
+                    dialog.dismiss();
+                    
+                } catch (NumberFormatException e) {
+                    etOfferAmount.setError("Số tiền không hợp lệ");
+                }
+            });
+        });
+        
+        dialog.show();
+    }
+      private void sendOffer(long buyerId, double amount, String message) {
+        CreateOfferRequest request = new CreateOfferRequest();
+        request.setListingId(listing.getId());
+        request.setOfferAmount(new java.math.BigDecimal(amount));
+        request.setMessage(message);
+        
+        Call<ApiResponse> call = apiService.createOffer(buyerId, request);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        Toast.makeText(requireContext(), "✅ Đã gửi yêu cầu giảm giá thành công!", Toast.LENGTH_SHORT).show();
+                        showOfferSentTip();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Gửi yêu cầu thất bại", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Gửi yêu cầu thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Log.e(TAG, "Error sending offer", t);
+                Toast.makeText(requireContext(), "Lỗi kết nối khi gửi yêu cầu", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void showOfferSentTip() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("🎉 Yêu cầu đã được gửi!")
+                .setMessage("Người bán sẽ nhận được thông báo về yêu cầu giảm giá của bạn. " +
+                           "Họ có thể:\n" +
+                           "• ✅ Chấp nhận giá của bạn\n" +
+                           "• ❌ Từ chối yêu cầu\n" +
+                           "• 🔄 Đề xuất giá khác\n\n" +
+                           "Bạn sẽ nhận được thông báo khi có phản hồi!")
+                .setPositiveButton("Hiểu rồi", null)
+                .setNeutralButton("Xem yêu cầu của tôi", (dialog, which) -> {
+                    // Navigate to offers fragment - could implement this later
+                    Toast.makeText(requireContext(), "Tính năng sẽ có trong bản cập nhật tiếp theo", Toast.LENGTH_SHORT).show();
+                })
+                .show();
     }
 }

@@ -174,10 +174,13 @@ public class MainMenu extends AppCompatActivity {
                 setSelectedButton(button);
             }
         }
-    }
-
-    public void navigateToNotificationSettings() {
+    }    public void navigateToNotificationSettings() {
         NotificationSettingsFragment fragment = new NotificationSettingsFragment();
+        loadFragment(fragment);
+    }
+    
+    public void navigateToPaymentHistory() {
+        PaymentHistoryFragment fragment = PaymentHistoryFragment.newInstance();
         loadFragment(fragment);
     }
     
@@ -212,6 +215,63 @@ public class MainMenu extends AppCompatActivity {
             getSupportFragmentManager().popBackStack();
         } else {
             super.onBackPressed();
+        }
+    }    /**
+     * Navigate to other user profile from anywhere in the app
+     */
+    public void navigateToOtherUserProfile(long userId, String displayName) {
+        try {
+            OtherUserProfileFragment fragment = OtherUserProfileFragment.newInstance(userId, displayName);
+            
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack("OtherUserProfile")
+                    .commit();
+                    
+            Log.d("MainMenu", "Navigated to other user profile: " + displayName + " (ID: " + userId + ")");
+        } catch (Exception e) {
+            Log.e("MainMenu", "Error navigating to other user profile", e);
+            Toast.makeText(this, "Không thể mở profile người dùng", Toast.LENGTH_SHORT).show();
+        }
+    }
+      /**
+     * Navigate to offer management for sellers
+     */
+    public void navigateToOfferManagement() {
+        try {
+            OfferManagementFragment fragment = OfferManagementFragment.newInstance();
+            
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack("OfferManagement")
+                    .commit();
+                    
+            Log.d("MainMenu", "Navigated to offer management");
+        } catch (Exception e) {
+            Log.e("MainMenu", "Error navigating to offer management", e);
+            Toast.makeText(this, "Không thể mở quản lý yêu cầu giảm giá", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Navigate to my offers for buyers
+     */
+    public void navigateToMyOffers() {
+        try {
+            MyOffersFragment fragment = new MyOffersFragment();
+            
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack("MyOffers")
+                    .commit();
+                    
+            Log.d("MainMenu", "Navigated to my offers");
+        } catch (Exception e) {
+            Log.e("MainMenu", "Error navigating to my offers", e);
+            Toast.makeText(this, "Không thể mở yêu cầu của tôi", Toast.LENGTH_SHORT).show();
         }
     }
 }
