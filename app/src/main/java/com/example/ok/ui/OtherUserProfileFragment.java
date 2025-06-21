@@ -202,11 +202,26 @@ public class OtherUserProfileFragment extends Fragment {
                         .into(profileImage);
             } else {
                 profileImage.setImageResource(R.drawable.user);
+            }            // Set rating from actual data
+            Log.d(TAG, "Rating data - Avg: " + response.getRatingAvg() + ", Count: " + response.getRatingCount());
+            
+            if (response.getRatingAvg() != null) {
+                float rating = response.getRatingAvg().floatValue();
+                ratingBar.setRating(rating);
+                Log.d(TAG, "Set rating bar to: " + rating);
+            } else {
+                ratingBar.setRating(0.0f);
+                Log.d(TAG, "Set rating bar to: 0.0 (null avg)");
             }
-
-            // Set rating (default values for now)
-            ratingBar.setRating(4.2f);
-            tvRatingCount.setText("15 đánh giá");            // Set join date
+            
+            if (response.getRatingCount() != null && response.getRatingCount() > 0) {
+                String ratingText = response.getRatingCount() + " đánh giá";
+                tvRatingCount.setText(ratingText);
+                Log.d(TAG, "Set rating count to: " + ratingText);
+            } else {
+                tvRatingCount.setText("Chưa có đánh giá");
+                Log.d(TAG, "Set rating count to: Chưa có đánh giá");
+            }// Set join date
             tvJoinDate.setText("Thành viên từ 2024");
 
         } catch (Exception e) {

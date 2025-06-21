@@ -142,11 +142,11 @@ public class OffersAdapter extends RecyclerView.Adapter<OffersAdapter.OfferViewH
             listener.onCounterOffer(offer, offer.getAmount().doubleValue() * 0.9, "Counter offer");
         }
     }
-    
-    private String getStatusText(String status) {
+      private String getStatusText(String status) {
         switch (status) {
             case "PENDING": return "Đang chờ";
             case "ACCEPTED": return "Đã chấp nhận";
+            case "COMPLETED": return "Đã hoàn thành";
             case "REJECTED": return "Đã từ chối";
             case "WITHDRAWN": return "Đã rút";
             case "COUNTERED": return "Đã trả giá";
@@ -157,7 +157,8 @@ public class OffersAdapter extends RecyclerView.Adapter<OffersAdapter.OfferViewH
     private int getStatusColor(String status) {
         switch (status) {
             case "PENDING": return R.color.warning_color;
-            case "ACCEPTED": return R.color.success_color;
+            case "ACCEPTED": 
+            case "COMPLETED": return R.color.success_color;
             case "REJECTED":
             case "WITHDRAWN": return R.color.error_color;
             case "COUNTERED": return R.color.info_color;

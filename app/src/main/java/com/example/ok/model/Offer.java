@@ -5,10 +5,9 @@ import java.math.BigDecimal;
 
 public class Offer implements Serializable {
     private static final long serialVersionUID = 1L;
-    
-    // Enum for offer status
+      // Enum for offer status
     public enum OfferStatus {
-        PENDING, ACCEPTED, REJECTED, WITHDRAWN, COUNTERED, EXPIRED
+        PENDING, ACCEPTED, REJECTED, WITHDRAWN, COUNTERED, EXPIRED, COMPLETED
     }
     
     private Long id;

@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,7 +25,6 @@ import com.example.ok.model.ApiResponse;
 import com.example.ok.model.PagedApiResponse;
 import com.example.ok.model.OfferResponse;
 import com.example.ok.model.Offer;
-import com.example.ok.model.WithdrawOfferRequest;
 import com.example.ok.util.SessionManager;
 import com.google.android.material.tabs.TabLayout;
 
@@ -55,8 +56,9 @@ public class MyOffersFragment extends Fragment {
     private List<Offer> rejectedOffers = new ArrayList<>();
     
     private int currentTab = 0; // 0: All, 1: Pending, 2: Accepted, 3: Rejected
-
-    @Override
+    
+    // Activity Result Launcher for Payment Activity
+    private ActivityResultLauncher<Intent> paymentActivityLauncher;    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         apiService = RetrofitClient.getApiService();
@@ -65,6 +67,24 @@ public class MyOffersFragment extends Fragment {
         
         Log.d(TAG, "MyOffers - Current User ID: " + currentUserId);
         Log.d(TAG, "MyOffers - Is Logged In: " + sessionManager.isLoggedIn());
+        
+        // Initialize payment activity launcher
+        paymentActivityLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == getActivity().RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null) {
+                        boolean paymentSuccess = data.getBooleanExtra("payment_success", false);
+                        if (paymentSuccess) {
+                            Log.d(TAG, "Payment successful! Refreshing offers...");
+                            Toast.makeText(requireContext(), "Thanh toán thành công! Đang làm mới danh sách...", Toast.LENGTH_SHORT).show();
+                            loadMyOffers(); // Refresh the offers list
+                        }
+                    }
+                }
+            }
+        );
     }
     
     @Nullable
@@ -183,8 +203,7 @@ public class MyOffersFragment extends Fragment {
             for (OfferResponse offerResponse : offerResponses) {
                 Offer offer = offerResponse.toOffer();
                 allOffers.add(offer);
-                
-                // Filter by status
+                  // Filter by status
                 String status = offer.getStatus();
                 if (status != null) {
                     switch (status.toUpperCase()) {
@@ -193,6 +212,10 @@ public class MyOffersFragment extends Fragment {
                             pendingOffers.add(offer);
                             break;
                         case "ACCEPTED":
+                            acceptedOffers.add(offer);
+                            break;
+                        case "COMPLETED":
+                            // Completed offers go to accepted tab for now
                             acceptedOffers.add(offer);
                             break;
                         case "REJECTED":
@@ -258,25 +281,30 @@ public class MyOffersFragment extends Fragment {
         });
         dialog.show();
     }
-    
-    private void navigateToPayment(Offer offer) {
-        // Check if offer is accepted
+      private void navigateToPayment(Offer offer) {
+        // Check if offer is accepted and not already completed
         if (!"ACCEPTED".equalsIgnoreCase(offer.getStatus())) {
             Toast.makeText(requireContext(), "Chỉ có thể thanh toán khi offer đã được chấp nhận", Toast.LENGTH_SHORT).show();
             return;
         }
+        
+        // Check if offer is already completed
+        if ("COMPLETED".equalsIgnoreCase(offer.getStatus())) {
+            Toast.makeText(requireContext(), "Offer này đã được thanh toán và hoàn thành", Toast.LENGTH_SHORT).show();
+            return;
+        }
           Log.d(TAG, "Navigating to payment for offer: " + offer.getId() + 
                    ", price: " + offer.getAmount() + 
-                   ", listing: " + offer.getListingTitle());
-          // Start PaymentActivity with offer details
+                   ", listing: " + offer.getListingTitle());        // Start PaymentActivity with offer details
         Intent intent = new Intent(requireContext(), PaymentActivity.class);
         intent.putExtra("LISTING_ID", offer.getListingId());
         intent.putExtra("LISTING_TITLE", offer.getListingTitle());
         intent.putExtra("OFFER_ID", offer.getId());
-        intent.putExtra("listingPrice", offer.getAmount().doubleValue()); // Fix: Use correct key
+        intent.putExtra("PRICE", offer.getAmount().doubleValue()); // Use PRICE key for offer payment
+        intent.putExtra("listingPrice", offer.getAmount().doubleValue()); // Keep for compatibility
         intent.putExtra("IS_OFFER_PAYMENT", true); // Flag to indicate this is from accepted offer
         
-        startActivity(intent);
+        paymentActivityLauncher.launch(intent);
           Toast.makeText(requireContext(), "Chuyển sang trang thanh toán với giá " + 
                        String.format("%.0f", offer.getAmount().doubleValue()) + " VND", Toast.LENGTH_SHORT).show();
     }
@@ -322,17 +350,14 @@ public class MyOffersFragment extends Fragment {
             }
         });
     }
-    
-    private void withdrawOffer(Offer offer) {
+      private void withdrawOffer(Offer offer) {
         if (!"PENDING".equalsIgnoreCase(offer.getStatus()) && 
             !"COUNTERED".equalsIgnoreCase(offer.getStatus())) {
             Toast.makeText(requireContext(), "Không thể rút lại offer này", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        WithdrawOfferRequest request = new WithdrawOfferRequest(offer.getId());
-        
-        Call<ApiResponse> call = apiService.withdrawOffer(request);
+        Call<ApiResponse> call = apiService.withdrawOffer(offer.getId(), currentUserId);
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {

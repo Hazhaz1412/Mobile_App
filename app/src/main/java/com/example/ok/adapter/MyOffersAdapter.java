@@ -160,8 +160,7 @@ public class MyOffersAdapter extends RecyclerView.Adapter<MyOffersAdapter.MyOffe
             
             String status = offer.getStatus();
             if (status == null) status = "PENDING";
-            
-            switch (status.toUpperCase()) {
+              switch (status.toUpperCase()) {
                 case "PENDING":
                     statusText = "⏳ Chờ phản hồi";
                     statusColor = R.color.warning_color;
@@ -169,6 +168,11 @@ public class MyOffersAdapter extends RecyclerView.Adapter<MyOffersAdapter.MyOffe
                     break;
                 case "ACCEPTED":
                     statusText = "✅ Đã chấp nhận";
+                    statusColor = R.color.success_color;
+                    indicatorColor = R.color.success_color;
+                    break;
+                case "COMPLETED":
+                    statusText = "🎉 Đã hoàn thành";
                     statusColor = R.color.success_color;
                     indicatorColor = R.color.success_color;
                     break;
@@ -202,14 +206,16 @@ public class MyOffersAdapter extends RecyclerView.Adapter<MyOffersAdapter.MyOffe
             if (offer.getCreatedAt() != null) {
                 tvCreatedAt.setText(formatRelativeTime(offer.getCreatedAt()));
             }
-            
-            // Update button text based on status
+              // Update button text based on status
             String offerStatus = offer.getStatus();
             if ("PENDING".equalsIgnoreCase(offerStatus) || "COUNTERED".equalsIgnoreCase(offerStatus)) {
                 btnViewDetails.setText("Xem chi tiết");
                 btnViewDetails.setBackgroundTintList(context.getColorStateList(R.color.colorPrimary));
             } else if ("ACCEPTED".equalsIgnoreCase(offerStatus)) {
                 btnViewDetails.setText("Đã chấp nhận");
+                btnViewDetails.setBackgroundTintList(context.getColorStateList(R.color.success_color));
+            } else if ("COMPLETED".equalsIgnoreCase(offerStatus)) {
+                btnViewDetails.setText("Đã hoàn thành");
                 btnViewDetails.setBackgroundTintList(context.getColorStateList(R.color.success_color));
             } else if ("REJECTED".equalsIgnoreCase(offerStatus)) {
                 btnViewDetails.setText("Bị từ chối");

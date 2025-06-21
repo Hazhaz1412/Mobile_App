@@ -382,9 +382,27 @@ public class UserFragment extends Fragment {
                         .placeholder(R.drawable.user)
                         .error(R.drawable.user)
                         .circleCrop()
-                        .into(profileImage);
-            } else {
+                        .into(profileImage);            } else {
                 profileImage.setImageResource(R.drawable.user);
+            }            // Update rating bar and count
+            Log.d(TAG, "Rating data - Avg: " + response.getRatingAvg() + ", Count: " + response.getRatingCount());
+            
+            if (response.getRatingAvg() != null) {
+                float rating = response.getRatingAvg().floatValue();
+                ratingBar.setRating(rating);
+                Log.d(TAG, "Set rating bar to: " + rating);
+            } else {
+                ratingBar.setRating(0.0f);
+                Log.d(TAG, "Set rating bar to: 0.0 (null avg)");
+            }
+            
+            if (response.getRatingCount() != null && response.getRatingCount() > 0) {
+                String ratingText = response.getRatingCount() + " đánh giá";
+                tvRatingCount.setText(ratingText);
+                Log.d(TAG, "Set rating count to: " + ratingText);
+            } else {
+                tvRatingCount.setText("Chưa có đánh giá");
+                Log.d(TAG, "Set rating count to: Chưa có đánh giá");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error updating UI with user data", e);

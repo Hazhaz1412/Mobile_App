@@ -721,11 +721,11 @@ public class PaymentActivity extends AppCompatActivity {
         progressDialog.setMessage("Đang xử lý thanh toán...");
         progressDialog.setCancelable(false);
         progressDialog.show();
-        
-        // Get payment details from intent
+          // Get payment details from intent
         double amount = getIntent().getDoubleExtra("listingPrice", 0);
         String listingTitle = getIntent().getStringExtra("listingTitle");
         Long sellerId = getIntent().getLongExtra("sellerId", -1);
+        Long offerId = getIntent().getLongExtra("OFFER_ID", -1); // Get offer ID if this is offer payment
         
         // Get current user ID
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
@@ -734,6 +734,13 @@ public class PaymentActivity extends AppCompatActivity {
         // Create payment request
         com.example.ok.model.PaymentRequest paymentRequest = new com.example.ok.model.PaymentRequest();
         paymentRequest.setListingId(listingId);
+        
+        // Set offer ID if this is an offer payment
+        if (offerId != null && offerId != -1) {
+            paymentRequest.setOfferId(offerId);
+            Log.d(TAG, "Setting offer ID in payment request: " + offerId);
+        }
+        
         paymentRequest.setPaymentMethodType(selectedPaymentMethod.getType());
         paymentRequest.setAmount(amount);
         paymentRequest.setDescription("Thanh toán cho: " + listingTitle);

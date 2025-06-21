@@ -376,10 +376,18 @@ public interface ApiService {
     @GET("api/offers/seller/{sellerId}")
     Call<PagedApiResponse<OfferResponse>> getOffersBySeller(@Path("sellerId") Long sellerId);
 
-    // Withdraw an offer (for buyers)
-    @POST("api/offers/withdraw")
-    Call<ApiResponse> withdrawOffer(@Body WithdrawOfferRequest request);
-
+    // Check offer status and purchasability
+    @GET("api/offers/{offerId}/status")
+    Call<ApiResponse> checkOfferStatus(@Path("offerId") Long offerId);
+    
+    // Get offer details with updated status
+    @GET("api/offers/{offerId}/details")
+    Call<ApiResponse> getOfferDetails(@Path("offerId") Long offerId);
+    
+    // Check if listing is available for purchase
+    @GET("api/offers/listing/{listingId}/available")
+    Call<ApiResponse> checkListingAvailability(@Path("listingId") Long listingId);
+    
     // ========== TRANSACTION ENDPOINTS ==========
     
     // Create a direct purchase transaction

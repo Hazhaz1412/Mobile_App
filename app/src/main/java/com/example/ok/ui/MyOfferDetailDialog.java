@@ -47,29 +47,27 @@ public class MyOfferDetailDialog extends Dialog {
         Button btnWithdraw = findViewById(R.id.btnWithdraw);
         Button btnViewListing = findViewById(R.id.btnViewListing);
         Button btnBuyNow = findViewById(R.id.btnBuyNow);
-        
-        // Show/hide buttons based on offer status
+          // Show/hide buttons based on offer status
         String status = offer.getStatus();
-          // Buy Now button - only show for accepted offers that haven't been paid yet
-        if ("ACCEPTED".equalsIgnoreCase(status)) {
-            if (offer.isHasPaidTransaction()) {
-                // Already paid - show disabled button with different text
-                btnBuyNow.setText("ĐÃ THANH TOÁN");
-                btnBuyNow.setEnabled(false);
-                btnBuyNow.setVisibility(View.VISIBLE);
-                btnBuyNow.setBackgroundColor(getContext().getColor(R.color.text_secondary));
-            } else {
-                // Not paid yet - show buy button
-                btnBuyNow.setText("MUA NGAY");
-                btnBuyNow.setEnabled(true);
-                btnBuyNow.setVisibility(View.VISIBLE);
-                btnBuyNow.setOnClickListener(v -> {
-                    if (listener != null) {
-                        listener.onBuyNow(offer);
-                    }
-                    dismiss();
-                });
-            }
+        
+        // Buy Now button - check completion status first
+        if ("COMPLETED".equalsIgnoreCase(status) || offer.isHasPaidTransaction()) {
+            // Already completed/paid - show disabled button with different text
+            btnBuyNow.setText("ĐÃ HOÀN THÀNH");
+            btnBuyNow.setEnabled(false);
+            btnBuyNow.setVisibility(View.VISIBLE);
+            btnBuyNow.setBackgroundColor(getContext().getColor(R.color.text_secondary));
+        } else if ("ACCEPTED".equalsIgnoreCase(status)) {
+            // Accepted but not paid yet - show buy button
+            btnBuyNow.setText("MUA NGAY");
+            btnBuyNow.setEnabled(true);
+            btnBuyNow.setVisibility(View.VISIBLE);
+            btnBuyNow.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onBuyNow(offer);
+                }
+                dismiss();
+            });
         } else {
             btnBuyNow.setVisibility(View.GONE);
         }
@@ -157,14 +155,17 @@ public class MyOfferDetailDialog extends Dialog {
         
         String status = offer.getStatus();
         if (status == null) status = "PENDING";
-        
-        switch (status.toUpperCase()) {
+          switch (status.toUpperCase()) {
             case "PENDING":
                 statusText = "⏳ Chờ phản hồi từ người bán";
                 statusColor = R.color.warning_color;
                 break;
             case "ACCEPTED":
                 statusText = "✅ Đã được chấp nhận";
+                statusColor = R.color.success_color;
+                break;
+            case "COMPLETED":
+                statusText = "🎉 Đã hoàn thành thanh toán";
                 statusColor = R.color.success_color;
                 break;
             case "REJECTED":

@@ -1,8 +1,9 @@
 package com.example.ok.ui;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -67,7 +68,7 @@ import retrofit2.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 
-public class ChatFragment extends Fragment {
+public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActionListener {
     private static final String TAG = "ChatFragment";
     private static final int PAGE_SIZE = 20;
     private static final int REQUEST_SELECT_IMAGE = 101;
@@ -170,6 +171,59 @@ public class ChatFragment extends Fragment {
         setupListeners();
         initChatRoom();
     }
+    
+    // 🔥 FIX: Thêm lifecycle methods để quản lý polling    @Override
+    public void onResume() {
+        super.onResume();
+        isFragmentVisible = true;
+        
+        // Clear notifications khi user mở chat
+        clearNotificationsForThisChat();
+        
+        // 🔥 FIX: Restart polling nếu đã có messages và chat room ready
+        if (roomId != -1 && !messageList.isEmpty()) {
+            startMessagePolling();
+        }
+        
+        Log.d(TAG, "Fragment resumed - fragment is now visible");
+    }
+    
+    @Override
+    public void onPause() {
+        super.onPause();
+        isFragmentVisible = false;
+        
+        // 🔥 CRITICAL FIX: Dừng polling khi fragment không visible
+        stopMessagePolling();
+        
+        Log.d(TAG, "Fragment paused - polling stopped");
+    }
+    
+    @Override
+    public void onStop() {
+        super.onStop();
+        isFragmentVisible = false;
+        
+        // 🔥 Đảm bảo polling dừng hoàn toàn
+        stopMessagePolling();
+        
+        Log.d(TAG, "Fragment stopped - ensuring polling is stopped");
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        
+        // 🔥 Cleanup tất cả resources
+        stopMessagePolling();
+        
+        // Clear handlers
+        if (messageHandler != null) {
+            messageHandler.removeCallbacksAndMessages(null);
+        }
+        
+        Log.d(TAG, "Fragment destroyed - all resources cleaned up");
+    }
       private void initViews(View view) {        // Toolbar
         ImageButton btnBack = view.findViewById(R.id.btnBack);
         tvOtherUserName = view.findViewById(R.id.tvOtherUserName);
@@ -192,9 +246,11 @@ public class ChatFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
         recyclerMessages.setLayoutManager(layoutManager);
-        
-        chatAdapter = new ChatAdapter(requireContext(), messageList, myId);
+          chatAdapter = new ChatAdapter(requireContext(), messageList, myId);
         recyclerMessages.setAdapter(chatAdapter);
+        
+        // 🔥 Set action listener cho sửa/xóa tin nhắn
+        chatAdapter.setOnMessageActionListener(this);
         
         // Set initial UI values
         tvOtherUserName.setText(otherName);
@@ -411,10 +467,12 @@ public class ChatFragment extends Fragment {
                     
                     // Mark messages as read
                     markMessagesAsRead();
-                    
-                    // Start polling for new messages if this is the first load
+                      // Start polling for new messages if this is the first load
                     if (currentPage == 1) {
-                        startMessagePolling();
+                        // 🔥 FIX: Chỉ bắt đầu polling khi fragment visible
+                        if (isFragmentVisible) {
+                            startMessagePolling();
+                        }
                     }} else if (response.code() == 403) {
                     // Handle 403 specifically for chat messages
                     Log.e(TAG, "=== 403 FORBIDDEN ERROR ===");
@@ -454,13 +512,14 @@ public class ChatFragment extends Fragment {
                             Log.e(TAG, "Other endpoint test failed: " + t.getMessage());
                         }
                     });
-                    
-                    // Check if it's a fresh chat room (no messages yet)
+                      // Check if it's a fresh chat room (no messages yet)
                     if (currentPage == 0) {
                         Log.d(TAG, "Fresh chat room - treating as normal (no messages yet)");
                         canLoadMore = false;
-                        // Start polling anyway in case messages come in
-                        startMessagePolling();
+                        // 🔥 FIX: Chỉ start polling nếu fragment visible
+                        if (isFragmentVisible) {
+                            startMessagePolling();
+                        }
                     } else {
                         Toast.makeText(requireContext(), "Lỗi xác thực khi tải tin nhắn. Vui lòng đăng nhập lại.", Toast.LENGTH_SHORT).show();
                     }
@@ -484,8 +543,7 @@ public class ChatFragment extends Fragment {
                     Log.d(TAG, "Fragment not attached, skipping error handling");
                     return;
                 }
-                
-                hideProgress();
+                  hideProgress();
                 isLoading = false;
                 swipeRefresh.setRefreshing(false);
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
@@ -495,7 +553,10 @@ public class ChatFragment extends Fragment {
                 if (currentPage == 0) {
                     Log.d(TAG, "Network error on first load - might be new chat room");
                     canLoadMore = false;
-                    startMessagePolling();
+                    // 🔥 FIX: Chỉ start polling nếu fragment visible
+                    if (isFragmentVisible) {
+                        startMessagePolling();
+                    }
                 }
             }
         });
@@ -554,22 +615,26 @@ public class ChatFragment extends Fragment {
         Map<String, Object> request = new HashMap<>();
         request.put("chatRoomId", roomId);
         request.put("senderId", myId);
-        request.put("content", messageText);
-          // Send to server
+        request.put("content", messageText);        // Send to server
         chatApiService.sendTextMessageDirect(request).enqueue(new Callback<ChatMessage>() {
             @Override
             public void onResponse(@NonNull Call<ChatMessage> call, @NonNull Response<ChatMessage> response) {
                 Log.d(TAG, "Send message response code: " + response.code());
                 
                 if (response.isSuccessful() && response.body() != null) {
-                    // Update message with server data
+                    // 🔥 FIX: Update optimistic message với server data
                     ChatMessage serverMessage = response.body();
                     int lastIndex = messageList.size() - 1;
                     if (lastIndex >= 0) {
-                        messageList.set(lastIndex, serverMessage);
+                        // Cập nhật message với ID từ server
+                        ChatMessage optimisticMessage = messageList.get(lastIndex);
+                        optimisticMessage.setId(serverMessage.getId());
+                        optimisticMessage.setCreatedAt(serverMessage.getCreatedAt());
+                        
                         chatAdapter.notifyItemChanged(lastIndex);
-                        Log.d(TAG, "Message sent successfully with ID: " + (serverMessage.getId() != null ? serverMessage.getId() : "null"));
-                    }                } else {
+                        Log.d(TAG, "✅ Message sent successfully with ID: " + serverMessage.getId());
+                    }
+                } else {
                     // Message failed - show error and remove optimistic message
                     if (!isAdded() || getContext() == null) return;
                     Log.e(TAG, "Failed to send message: " + response.code());
@@ -675,72 +740,116 @@ public class ChatFragment extends Fragment {
         } else {
             Log.e(TAG, "Token test FAILED - no valid token found");
         }
-    }
-      private void startMessagePolling() {
+    }    private void startMessagePolling() {
+        // 🔥 FIX: Dừng polling cũ trước khi bắt đầu polling mới
+        stopMessagePolling();
+        
+        Log.d(TAG, "Starting message polling for room: " + roomId);
+        
         messageRunnable = new Runnable() {
             @Override
-            public void run() {                if (isAdded() && roomId != -1) {
-                    // Get latest message ID - use safe method
-                    final long latestMessageId = !messageList.isEmpty() ? 
-                        messageList.get(messageList.size() - 1).getIdSafely() : 0;
-                      // Poll for new messages
-                    chatApiService.getChatMessagesDirect(roomId, myId).enqueue(new Callback<List<ChatMessage>>() {
-                        @Override
-                        public void onResponse(@NonNull Call<List<ChatMessage>> call, @NonNull Response<List<ChatMessage>> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                List<ChatMessage> newMessages = response.body();                                // Filter for messages newer than our latest
-                                List<ChatMessage> messagesToAdd = new ArrayList<>();
-                                for (ChatMessage message : newMessages) {
-                                    // Use safe ID method
-                                    if (message.getIdSafely() > latestMessageId) {
-                                        messagesToAdd.add(message);
-                                    }
-                                }// Add new messages to UI
-                                if (!messagesToAdd.isEmpty()) {
-                                    int insertPosition = messageList.size();
-                                    messageList.addAll(messagesToAdd);
-                                    chatAdapter.notifyItemRangeInserted(insertPosition, messagesToAdd.size());
-                                    
-                                    // Smooth scroll to bottom if fragment is visible
-                                    if (isFragmentVisible) {
-                                        new Handler(Looper.getMainLooper()).post(() -> {
-                                            recyclerMessages.smoothScrollToPosition(messageList.size() - 1);
-                                        });
-                                        
-                                        // Mark messages as read if user is viewing the chat
-                                        markMessagesAsRead();
-                                    } else {
-                                        // Show local notification if fragment is not visible
-                                        showNewMessageNotification(messagesToAdd);
-                                    }
-                                    
-                                    Log.d(TAG, "Added " + messagesToAdd.size() + " new messages from polling");
+            public void run() {
+                // 🔥 FIX: Kiểm tra fragment state và visibility trước khi poll
+                if (!isAdded() || roomId == -1 || !isFragmentVisible) {
+                    Log.d(TAG, "Polling cancelled - fragment not ready or not visible");
+                    return;
+                }
+                
+                // Get latest message ID - use safe method
+                final long latestMessageId = !messageList.isEmpty() ? 
+                    messageList.get(messageList.size() - 1).getIdSafely() : 0;
+                  
+                // Poll for new messages
+                chatApiService.getChatMessagesDirect(roomId, myId).enqueue(new Callback<List<ChatMessage>>() {
+                    @Override
+                    public void onResponse(@NonNull Call<List<ChatMessage>> call, @NonNull Response<List<ChatMessage>> response) {
+                        // 🔥 FIX: Kiểm tra fragment state trước khi xử lý response
+                        if (!isAdded() || !isFragmentVisible) {
+                            Log.d(TAG, "Fragment not visible, skipping poll response");
+                            return;
+                        }
+                        
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<ChatMessage> newMessages = response.body();
+                            
+                            // 🔥 FIX: Lọc tin nhắn mới và kiểm tra duplicate với optimistic UI
+                            List<ChatMessage> messagesToAdd = new ArrayList<>();
+                            for (ChatMessage message : newMessages) {
+                                if (message.getIdSafely() > latestMessageId && !isDuplicateMessage(message)) {
+                                    messagesToAdd.add(message);
                                 }
                             }
                             
-                            // Schedule next poll
-                            messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
+                            // Add new messages to UI
+                            if (!messagesToAdd.isEmpty()) {
+                                int insertPosition = messageList.size();
+                                messageList.addAll(messagesToAdd);
+                                chatAdapter.notifyItemRangeInserted(insertPosition, messagesToAdd.size());
+                                
+                                // Smooth scroll to bottom if fragment is visible
+                                if (isFragmentVisible) {
+                                    new Handler(Looper.getMainLooper()).post(() -> {
+                                        recyclerMessages.smoothScrollToPosition(messageList.size() - 1);
+                                    });
+                                    
+                                    // Mark messages as read if user is viewing the chat
+                                    markMessagesAsRead();
+                                } else {
+                                    // Show local notification if fragment is not visible
+                                    showNewMessageNotification(messagesToAdd);
+                                }
+                                
+                                Log.d(TAG, "Added " + messagesToAdd.size() + " new messages from polling");
+                            }
                         }
                         
-                        @Override
-                        public void onFailure(@NonNull Call<List<ChatMessage>> call, @NonNull Throwable t) {
-                            Log.e(TAG, "Error polling for messages", t);
-                            
-                            // Schedule next poll even if this one failed
+                        // 🔥 FIX: Chỉ schedule poll tiếp theo nếu fragment vẫn visible
+                        if (isAdded() && isFragmentVisible && messageRunnable != null) {
                             messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
                         }
-                    });
-                }
+                    }
+                    
+                    @Override
+                    public void onFailure(@NonNull Call<List<ChatMessage>> call, @NonNull Throwable t) {
+                        Log.e(TAG, "Error polling for messages", t);
+                        
+                        // 🔥 FIX: Chỉ schedule poll tiếp theo nếu fragment vẫn visible
+                        if (isAdded() && isFragmentVisible && messageRunnable != null) {
+                            messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
+                        }
+                    }
+                });
             }
         };
         
-        // Start polling
-        messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
-    }
-      private void stopMessagePolling() {
+        // Start polling với delay nhỏ để tránh conflict với optimistic UI
+        messageHandler.postDelayed(messageRunnable, 1000); // 1 second delay
+    }    private void stopMessagePolling() {
+        Log.d(TAG, "Stopping message polling");
+        
         if (messageHandler != null && messageRunnable != null) {
             messageHandler.removeCallbacks(messageRunnable);
+            messageRunnable = null;
         }
+        
+        Log.d(TAG, "Message polling stopped successfully");
+    }
+    
+    // 🔥 FIX: Thêm method để kiểm tra duplicate message
+    private boolean isDuplicateMessage(ChatMessage newMessage) {
+        if (newMessage == null || newMessage.getId() == null) {
+            return false;
+        }
+        
+        // Kiểm tra xem message này đã tồn tại trong messageList chưa
+        for (ChatMessage existingMessage : messageList) {
+            if (existingMessage.getId() != null && 
+                existingMessage.getId().equals(newMessage.getId())) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

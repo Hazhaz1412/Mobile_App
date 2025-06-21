@@ -2,6 +2,7 @@ package com.example.ok.model;
 
 public class PaymentRequest {
     private Long listingId;
+    private Long offerId; // Add offer ID for offer payments
     private String paymentMethodType;
     private Double amount;
     private String description;
@@ -30,10 +31,12 @@ public class PaymentRequest {
         this.paymentMethodType = paymentMethodType;
         this.amount = amount;
     }
-    
-    // Getters and Setters
+      // Getters and Setters
     public Long getListingId() { return listingId; }
     public void setListingId(Long listingId) { this.listingId = listingId; }
+    
+    public Long getOfferId() { return offerId; }
+    public void setOfferId(Long offerId) { this.offerId = offerId; }
     
     public String getPaymentMethodType() { return paymentMethodType; }
     public void setPaymentMethodType(String paymentMethodType) { this.paymentMethodType = paymentMethodType; }

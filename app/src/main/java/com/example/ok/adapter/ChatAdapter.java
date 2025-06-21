@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.PopupMenu;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,14 +27,20 @@ import java.util.Locale;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
 
+    // 🔥 Interface cho edit/delete callbacks
+    public interface OnMessageActionListener {
+        void onEditMessage(ChatMessage message, int position);
+        void onDeleteMessage(ChatMessage message, int position);
+        void onCopyMessage(ChatMessage message);
+    }
+
     private List<ChatMessage> messages;
     private Context context;
     private Long currentUserId;
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat dateFormat;
     private Calendar calendar;
-
-    public ChatAdapter(Context context, List<ChatMessage> messages, Long currentUserId) {
+    private OnMessageActionListener actionListener;    public ChatAdapter(Context context, List<ChatMessage> messages, Long currentUserId) {
         this.context = context;
         this.messages = messages;
         this.currentUserId = currentUserId;
@@ -41,15 +48,18 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         this.calendar = Calendar.getInstance();
     }
+    
+    // 🔥 Setter cho action listener
+    public void setOnMessageActionListener(OnMessageActionListener listener) {
+        this.actionListener = listener;
+    }
 
     @NonNull
     @Override
     public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_chat_message, parent, false);
         return new MessageViewHolder(view);
-    }
-
-    @Override
+    }    @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         ChatMessage message = messages.get(position);
         
@@ -76,7 +86,19 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
             holder.layoutMessage.setBackgroundResource(R.drawable.bg_message_received);
         }
         holder.layoutMessage.setLayoutParams(params);
-          // Handle image messages
+        
+        // 🔥 Thêm long click listener cho tin nhắn của mình
+        if (isMyMessage && actionListener != null) {
+            holder.layoutMessage.setOnLongClickListener(v -> {
+                showMessageActionMenu(v, message, position);
+                return true;
+            });
+        } else {
+            // Clear listener cho tin nhắn của người khác
+            holder.layoutMessage.setOnLongClickListener(null);
+        }
+        
+        // Handle image messages
         if (message.isImage()) {
             // For image messages, content contains the image URL
             String imageUrl = message.getContent();
@@ -142,6 +164,55 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     public void setMessages(List<ChatMessage> messages) {
         this.messages = messages;
         notifyDataSetChanged();
+    }
+    
+    // 🔥 Methods để update/remove message
+    public void updateMessage(int position, ChatMessage updatedMessage) {
+        if (position >= 0 && position < messages.size()) {
+            messages.set(position, updatedMessage);
+            notifyItemChanged(position);
+        }
+    }
+    
+    public void removeMessage(int position) {
+        if (position >= 0 && position < messages.size()) {
+            messages.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
+    // 🔥 Method để hiện popup menu cho tin nhắn
+    private void showMessageActionMenu(View view, ChatMessage message, int position) {
+        PopupMenu popup = new PopupMenu(context, view);
+        popup.getMenuInflater().inflate(R.menu.message_action_menu, popup.getMenu());
+        
+        // Ẩn option "Sửa" nếu là tin nhắn hình ảnh
+        if (message.isImage()) {
+            popup.getMenu().findItem(R.id.action_edit).setVisible(false);
+        }
+        
+        popup.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.action_edit) {
+                if (actionListener != null) {
+                    actionListener.onEditMessage(message, position);
+                }
+                return true;
+            } else if (itemId == R.id.action_delete) {
+                if (actionListener != null) {
+                    actionListener.onDeleteMessage(message, position);
+                }
+                return true;
+            } else if (itemId == R.id.action_copy) {
+                if (actionListener != null) {
+                    actionListener.onCopyMessage(message);
+                }
+                return true;
+            }
+            return false;
+        });
+        
+        popup.show();
     }
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
