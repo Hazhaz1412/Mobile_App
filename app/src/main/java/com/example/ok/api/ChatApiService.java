@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
@@ -74,6 +76,8 @@ public interface ChatApiService {    /**
     Call<ChatMessage> sendTextMessageDirect(@Body Map<String, Object> request);
       /**
      * Send an image message
+     */    /**
+     * Send an image message
      */
     @Multipart
     @POST("api/chat/messages/image")
@@ -106,12 +110,28 @@ public interface ChatApiService {    /**
             @Path("userId") Long userId,
             @Query("reason") String reason,
             @Query("description") String description);
-    
-    /**
+      /**
      * Unblock a chat room
      */
     @PUT("api/chat/rooms/{chatRoomId}/unblock/{userId}")
     Call<ApiResponse> unblockChatRoom(
             @Path("chatRoomId") Long chatRoomId,
+            @Path("userId") Long userId);
+      // 🔥 API endpoints cho sửa/xóa tin nhắn
+    /**
+     * Update a message
+     */
+    @PUT("api/chat/messages/{messageId}/user/{userId}")
+    Call<ApiResponse> updateMessage(
+            @Path("messageId") Long messageId,
+            @Path("userId") Long userId,
+            @Body Map<String, Object> request);
+    
+    /**
+     * Delete a message
+     */
+    @DELETE("api/chat/messages/{messageId}/user/{userId}")
+    Call<ApiResponse> deleteMessage(
+            @Path("messageId") Long messageId,
             @Path("userId") Long userId);
 }

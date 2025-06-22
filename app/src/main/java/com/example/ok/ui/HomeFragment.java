@@ -171,9 +171,8 @@ public class HomeFragment extends Fragment {
             // Initialize RetrofitClient before using any API services
             RetrofitClient.init(requireContext());
             apiService = RetrofitClient.getApiService();
-            listingApiService = RetrofitClient.getListingApiService();
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Lỗi khởi tạo dịch vụ", Toast.LENGTH_SHORT).show();
+            listingApiService = RetrofitClient.getListingApiService();        } catch (Exception e) {
+            safeShowToast("Lỗi khởi tạo dịch vụ");
         }
     }
 
@@ -279,11 +278,9 @@ public class HomeFragment extends Fragment {
         loadCategories();
         loadHomeRecommendations();
         loadFeaturedListings();
-    }
-
-    private void loadHomeRecommendations() {
+    }    private void loadHomeRecommendations() {
         if (listingApiService == null) {
-            Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+            safeShowToast("Dịch vụ chưa sẵn sàng");
             return;
         }
 
@@ -304,25 +301,20 @@ public class HomeFragment extends Fragment {
                             recommendationsAdapter.setCategories(categories);
                         } else {
                             // Show empty state for recommendations
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Không thể tải gợi ý: " + pagedResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        }                    } else {
+                        safeShowToast("Không thể tải gợi ý: " + pagedResponse.getMessage());
                     }
                 } else {
-                    Toast.makeText(getContext(), "Lỗi tải gợi ý: " + response.code(), Toast.LENGTH_SHORT).show();
+                    safeShowToast("Lỗi tải gợi ý: " + response.code());
                 }
-            }
-
-            @Override
+            }            @Override
             public void onFailure(Call<PagedApiResponse<CategoryWithListingsResponse>> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi kết nối gợi ý: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                safeShowToast("Lỗi kết nối gợi ý: " + t.getMessage());
             }
         });
-    }
-
-    private void loadFeaturedListings() {
+    }    private void loadFeaturedListings() {
         if (listingApiService == null) {
-            Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+            safeShowToast("Dịch vụ chưa sẵn sàng");
             return;
         }
 
@@ -341,35 +333,32 @@ public class HomeFragment extends Fragment {
                         } else {
                             // Show empty state
                             showEmptyState();
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Không thể tải sản phẩm: " + pagedResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        }                    } else {
+                        safeShowToast("Không thể tải sản phẩm: " + pagedResponse.getMessage());
                     }
                 } else {
-                    Toast.makeText(getContext(), "Lỗi tải dữ liệu: " + response.code(), Toast.LENGTH_SHORT).show();
+                    safeShowToast("Lỗi tải dữ liệu: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<PagedApiResponse<Listing>> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                // Check if fragment is still attached before showing toast
+                safeShowToast("Lỗi kết nối: " + t.getMessage());
             }
         });
-    }
-
-    private void showEmptyState() {
+    }    private void showEmptyState() {
         // TODO: Show empty state view
-        Toast.makeText(getContext(), "Chưa có sản phẩm nào", Toast.LENGTH_SHORT).show();
-    }    // Navigation methods
+        safeShowToast("Chưa có sản phẩm nào");
+    }// Navigation methods
     private void navigateToCategoryListings(String categoryName, Long categoryId) {
         Log.d("HomeFragment", "Navigating to category: " + categoryName + " (ID: " + categoryId + ")");
         
         // Navigate to SearchFragment with category filter
         if (getActivity() instanceof MainMenu) {
             SearchFragment searchFragment = SearchFragment.newInstance(categoryId, categoryName);
-            ((MainMenu) getActivity()).replaceFragment(searchFragment);
-        } else {
-            Toast.makeText(getContext(), "Xem danh mục: " + categoryName, Toast.LENGTH_SHORT).show();
+            ((MainMenu) getActivity()).replaceFragment(searchFragment);        } else {
+            safeShowToast("Xem danh mục: " + categoryName);
         }
     }
 
@@ -392,9 +381,8 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void navigateToMessages() {
-        // Avatar click should go to messages/chat
-        Toast.makeText(getContext(), "Mở tin nhắn", Toast.LENGTH_SHORT).show();
+    private void navigateToMessages() {        // Avatar click should go to messages/chat
+        safeShowToast("Mở tin nhắn");
         // TODO: Navigate to messages
         // if (getActivity() instanceof MainMenu) {
         //     ((MainMenu) getActivity()).navigateToTab("messages");
@@ -402,26 +390,24 @@ public class HomeFragment extends Fragment {
     }
 
     private void navigateToNotifications() {
-        Toast.makeText(getContext(), "Thông báo", Toast.LENGTH_SHORT).show();
+        safeShowToast("Thông báo");
         // TODO: Implement navigation to notifications
         // Navigation.findNavController(getView()).navigate(R.id.action_home_to_notifications);
     }
 
     private void navigateToAllListings(String type) {
-        Toast.makeText(getContext(), "Xem tất cả " + type, Toast.LENGTH_SHORT).show();
+        safeShowToast("Xem tất cả " + type);
         // TODO: Implement navigation to all listings
         // Bundle args = new Bundle();
         // args.putString("listingType", type);
         // Navigation.findNavController(getView()).navigate(R.id.action_home_to_all_listings, args);
+    }    private void showListingOptions(Listing listing) {
+        // TODO: Show bottom sheet or popup menu with options
+        safeShowToast("Tùy chọn cho: " + listing.getTitle());
     }
 
-    private void showListingOptions(Listing listing) {
-        // TODO: Show bottom sheet or popup menu with options
-        Toast.makeText(getContext(), "Tùy chọn cho: " + listing.getTitle(), Toast.LENGTH_SHORT).show();    }
-
-    private void loadCategories() {
-        if (apiService == null) {
-            Toast.makeText(getContext(), "Dịch vụ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+    private void loadCategories() {        if (apiService == null) {
+            safeShowToast("Dịch vụ chưa sẵn sàng");
             return;
         }
 
@@ -438,15 +424,20 @@ public class HomeFragment extends Fragment {
                             String json = gson.toJson(apiResponse.getData());
                             Type listType = new TypeToken<List<Category>>(){}.getType();
                             categories = gson.fromJson(json, listType);
+                              Log.d("HomeFragment", "Loaded " + categories.size() + " categories");
                             
-                            Log.d("HomeFragment", "Loaded " + categories.size() + " categories");
-                            
-                            // Update UI với categories mới
-                            updateCategoriesUI();
-                            
-                        } catch (Exception e) {
+                            // Update UI với categories mới - check if fragment is still attached
+                            if (isAdded() && getContext() != null) {
+                                updateCategoriesUI();
+                            } else {
+                                Log.w("HomeFragment", "Fragment not attached, skipping UI update");
+                            }
+                              } catch (Exception e) {
                             Log.e("HomeFragment", "Error parsing categories", e);
-                            setupDefaultCategories();
+                            // Check if fragment is still attached before calling setupDefaultCategories
+                            if (isAdded() && getContext() != null) {
+                                setupDefaultCategories();
+                            }
                         }
                     } else {
                         setupDefaultCategories();
@@ -461,8 +452,13 @@ public class HomeFragment extends Fragment {
                 Log.e("HomeFragment", "Failed to load categories", t);
                 setupDefaultCategories();
             }
-        });
-    }    private void setupDefaultCategories() {
+        });    }    private void setupDefaultCategories() {
+        // Check if fragment is still attached to avoid crashes
+        if (!isAdded() || getContext() == null) {
+            Log.w("HomeFragment", "Fragment not attached, cannot setup default categories");
+            return;
+        }
+        
         categories.clear();
         // Sử dụng thứ tự giống như API response
         categories.add(new Category(1L, "Điện tử", null, null, true));
@@ -474,9 +470,13 @@ public class HomeFragment extends Fragment {
         categories.add(new Category(7L, "Khác", null, null, true));
         
         updateCategoriesUI();
-    }
-
-    private void updateCategoriesUI() {
+    }private void updateCategoriesUI() {
+        // Check if fragment is still attached to avoid crashes
+        if (!isAdded() || getContext() == null) {
+            Log.w("HomeFragment", "Fragment not attached, cannot update categories UI");
+            return;
+        }
+        
         if (categoriesGrid == null || categories.isEmpty()) {
             return;
         }
@@ -500,9 +500,13 @@ public class HomeFragment extends Fragment {
                 updateCategoryRow(secondRow, 4, Math.min(categories.size(), 7));
             }
         }
-    }
-
-    private void updateCategoryRow(LinearLayout row, int startIndex, int endIndex) {
+    }    private void updateCategoryRow(LinearLayout row, int startIndex, int endIndex) {
+        // Check if fragment is still attached to avoid crashes
+        if (!isAdded() || getContext() == null) {
+            Log.w("HomeFragment", "Fragment not attached, cannot update category row");
+            return;
+        }
+        
         for (int i = 0; i < row.getChildCount() && (startIndex + i) < endIndex; i++) {
             int categoryIndex = startIndex + i;
             View categoryView = row.getChildAt(i);
@@ -520,7 +524,12 @@ public class HomeFragment extends Fragment {
                 final int finalCategoryIndex = categoryIndex;
                 categoryView.setClickable(true);
                 categoryView.setFocusable(true);
-                categoryView.setBackground(getResources().getDrawable(android.R.drawable.menuitem_background, null));
+                
+                try {
+                    categoryView.setBackground(getResources().getDrawable(android.R.drawable.menuitem_background, null));
+                } catch (Exception e) {
+                    Log.w("HomeFragment", "Could not set background", e);
+                }
                 
                 categoryView.setOnClickListener(v -> {
                     Category category = categories.get(finalCategoryIndex);
@@ -564,6 +573,13 @@ public class HomeFragment extends Fragment {
         }
         if (recommendationsAdapter != null) {
             recommendationsAdapter.setOnListingClickListener(null);
+        }
+    }
+    
+    // Utility method to safely show toast
+    private void safeShowToast(String message) {
+        if (isAdded() && getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
 }

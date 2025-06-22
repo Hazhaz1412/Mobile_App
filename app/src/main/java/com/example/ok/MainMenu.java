@@ -1,6 +1,7 @@
 package com.example.ok;
 
 import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -18,9 +19,7 @@ public class MainMenu extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_menu);
-
-        // Create notification channels when MainMenu starts - critical for notifications
+        setContentView(R.layout.activity_main_menu);        // Create notification channels when MainMenu starts - critical for notifications
         NotificationChannelManager.createNotificationChannels(this);
 
         initViews();
@@ -28,11 +27,9 @@ public class MainMenu extends AppCompatActivity {
 
         // Load default fragment (Home)
         if (savedInstanceState == null) {
-            // Check if opened from notification
-            handleNotificationIntent();
-            
-            // Load default if not opened from notification
+            // Check if opened from notification first
             if (!handleNotificationIntent()) {
+                // Load default if not opened from notification
                 loadFragment(new HomeFragment());
                 setSelectedButton(btnDashboard);
             }
@@ -183,17 +180,21 @@ public class MainMenu extends AppCompatActivity {
         PaymentHistoryFragment fragment = PaymentHistoryFragment.newInstance();
         loadFragment(fragment);
     }
-    
-    /**
-     * Handle intent from notification taps
+      /**
+     * Handle intent from notification taps - Enhanced for chat notifications
      */
     private boolean handleNotificationIntent() {
-        if (getIntent() != null && getIntent().getBooleanExtra("openChat", false)) {
-            // Get chat parameters from intent
-            long roomId = getIntent().getLongExtra("roomId", -1);
-            long myId = getIntent().getLongExtra("myId", -1);
-            long otherId = getIntent().getLongExtra("otherId", -1);
-            String otherName = getIntent().getStringExtra("otherName");
+        Intent intent = getIntent();
+        if (intent == null) {
+            return false;
+        }
+        
+        // Handle chat notification intent (new format)
+        if (intent.getBooleanExtra("open_chat", false)) {
+            long roomId = intent.getLongExtra("roomId", -1);
+            long myId = intent.getLongExtra("myId", -1);
+            long otherId = intent.getLongExtra("otherId", -1);
+            String otherName = intent.getStringExtra("otherName");
             
             if (roomId != -1 && myId != -1 && otherId != -1) {
                 // Open the specific chat
@@ -201,10 +202,52 @@ public class MainMenu extends AppCompatActivity {
                 loadFragment(chatFragment);
                 setSelectedButton(btnChat);
                 
-                Log.d("MainMenu", "Opened chat from notification: roomId=" + roomId);
+                Log.d("MainMenu", "✅ Opened chat from notification: roomId=" + roomId + 
+                                ", other=" + otherName);
+                
+                // Clear the intent to prevent re-opening on orientation change
+                intent.removeExtra("open_chat");
+                return true;
+            } else {
+                Log.w("MainMenu", "❌ Invalid chat parameters in notification intent");
+            }
+        }
+        
+        // Handle legacy chat notification intent (for compatibility)
+        if (intent.getBooleanExtra("openChat", false)) {
+            long roomId = intent.getLongExtra("roomId", -1);
+            long myId = intent.getLongExtra("myId", -1);
+            long otherId = intent.getLongExtra("otherId", -1);
+            String otherName = intent.getStringExtra("otherName");
+            
+            if (roomId != -1 && myId != -1 && otherId != -1) {
+                ChatFragment chatFragment = ChatFragment.newInstance(roomId, myId, otherId, otherName);
+                loadFragment(chatFragment);
+                setSelectedButton(btnChat);
+                
+                Log.d("MainMenu", "✅ Opened chat from legacy notification: roomId=" + roomId);
+                
+                // Clear the intent
+                intent.removeExtra("openChat");
                 return true;
             }
         }
+        
+        // Handle other notification types (offers, listings, etc.)
+        if (intent.getBooleanExtra("open_listing", false)) {
+            long listingId = intent.getLongExtra("listing_id", -1);
+            if (listingId != -1) {
+                // Open specific listing
+                ListingDetailFragment fragment = ListingDetailFragment.newInstance(listingId);
+                loadFragment(fragment);
+                setSelectedButton(btnDashboard);
+                
+                Log.d("MainMenu", "✅ Opened listing from notification: " + listingId);
+                intent.removeExtra("open_listing");
+                return true;
+            }
+        }
+        
         return false;
     }
 

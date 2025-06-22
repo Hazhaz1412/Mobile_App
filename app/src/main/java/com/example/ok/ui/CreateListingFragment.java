@@ -2,63 +2,6 @@ package com.example.ok.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.provider.MediaStore;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.ok.R;
-import com.example.ok.adapter.ImagePreviewAdapter;
-import com.example.ok.api.ApiService;
-import com.example.ok.api.ListingApiService;
-import com.example.ok.api.RetrofitClient;
-import com.example.ok.model.*;
-import com.example.ok.util.FileUtil;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import android.Manifest;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -122,11 +65,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// ...existing code...
 public class CreateListingFragment extends Fragment implements LocationListener {
 
     private static final int REQUEST_IMAGE_PICK = 1001;
-    private static final int REQUEST_LOCATION_PERMISSION = 1002;    private EditText etTitle, etDescription, etPrice, etLocation, etTags;
+    private static final int REQUEST_LOCATION_PERMISSION = 1002;
+    
+    // Edit mode variables
+    private boolean isEditMode = false;
+    private Listing editingListing = null;private EditText etTitle, etDescription, etPrice, etLocation, etTags;
     private Spinner spCategory, spCondition;
     private CheckBox cbNegotiable; // Add negotiable checkbox
     private Button btnSelectImages, btnGetLocation, btnPreview, btnSubmit;
@@ -433,22 +379,21 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                             setupConditionSpinner();
                         } catch (Exception e) {
                             Log.e("CreateListing", "Error parsing conditions", e);
-                            setupDefaultConditions();
-                        }
-                    } else {
+                            setupConditionSpinner();
+                        }                    } else {
                         Log.e("CreateListing", "API error: " + apiResponse.getMessage());
-                        setupDefaultConditions();
+                        setupConditionSpinner();
                     }
                 } else {
                     Log.e("CreateListing", "Response not successful: " + response.code());
-                    setupDefaultConditions();
+                    setupConditionSpinner();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
                 Log.e("CreateListing", "Network error", t);
-                setupDefaultConditions();
+                setupConditionSpinner();
             }
         });
     }
@@ -464,6 +409,9 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                 android.R.layout.simple_spinner_item, categoryNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spCategory.setAdapter(adapter);
+
+        // After setting up category spinner, check if we need to populate edit data
+        checkAndPopulateEditData();
     }
 
     private void setupConditionSpinner() {
@@ -477,38 +425,65 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                 android.R.layout.simple_spinner_item, conditionNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spCondition.setAdapter(adapter);
+
+        // After setting up condition spinner, check if we need to populate edit data
+        checkAndPopulateEditData();
     }
 
-    private void setupDefaultConditions() {
-        conditions.clear();
-
-        ItemCondition condition1 = new ItemCondition();
-        condition1.setId(1L);
-        condition1.setName("Mới");
-        conditions.add(condition1);
-
-        ItemCondition condition2 = new ItemCondition();
-        condition2.setId(2L);
-        condition2.setName("Như mới");
-        conditions.add(condition2);
-
-        ItemCondition condition3 = new ItemCondition();
-        condition3.setId(3L);
-        condition3.setName("Tốt");
-        conditions.add(condition3);
-
-        ItemCondition condition4 = new ItemCondition();
-        condition4.setId(4L);
-        condition4.setName("Khá tốt");
-        conditions.add(condition4);
-
-        ItemCondition condition5 = new ItemCondition();
-        condition5.setId(5L);
-        condition5.setName("Cũ");
-        conditions.add(condition5);
-
-        setupConditionSpinner();
-        Toast.makeText(getContext(), "Sử dụng dữ liệu tình trạng mặc định", Toast.LENGTH_SHORT).show();
+    private void checkAndPopulateEditData() {
+        // Only populate if both spinners are ready and we're in edit mode
+        if (isEditMode && editingListing != null && 
+            spCategory.getAdapter() != null && spCondition.getAdapter() != null) {
+            populateEditData();
+        }
+    }
+    
+    private void populateEditData() {
+        if (!isEditMode || editingListing == null) return;
+        
+        try {
+            // Populate basic fields
+            etTitle.setText(editingListing.getTitle());
+            etDescription.setText(editingListing.getDescription());
+            etPrice.setText(editingListing.getPrice().toString());
+            etLocation.setText(editingListing.getLocationText());
+            
+            if (editingListing.getTags() != null) {
+                etTags.setText(String.join(", ", editingListing.getTags()));
+            }
+            
+            cbNegotiable.setChecked(editingListing.getIsNegotiable() != null && editingListing.getIsNegotiable());
+            
+            // Set category spinner
+            if (editingListing.getCategoryId() != null) {
+                for (int i = 0; i < categories.size(); i++) {
+                    if (categories.get(i).getId().equals(editingListing.getCategoryId())) {
+                        spCategory.setSelection(i + 1); // +1 because of "Chọn danh mục" at index 0
+                        break;
+                    }
+                }
+            }
+            
+            // Set condition spinner
+            if (editingListing.getCondition() != null) {
+                for (int i = 0; i < conditions.size(); i++) {
+                    if (conditions.get(i).getName().equals(editingListing.getCondition())) {
+                        spCondition.setSelection(i + 1); // +1 because of "Chọn tình trạng" at index 0
+                        break;
+                    }
+                }
+            }
+            
+            // Update submit button text
+            btnSubmit.setText("Cập nhật tin đăng");
+            
+            // TODO: Load existing images if available
+            // loadExistingImages();
+            
+        } catch (Exception e) {
+            Log.e("CreateListing", "Error populating edit data", e);
+            Toast.makeText(getContext(), "Lỗi khi tải dữ liệu chỉnh sửa", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void selectImages() {
@@ -801,9 +776,7 @@ public class CreateListingFragment extends Fragment implements LocationListener 
 
         // Set default rating (you can get this from user profile)
         ratingBar.setRating(4.5f);
-    }
-
-    private void submitListing() {
+    }    private void submitListing() {
         if (!validateFields()) {
             return;
         }
@@ -813,7 +786,11 @@ public class CreateListingFragment extends Fragment implements LocationListener 
             return;
         }
 
-        btnSubmit.setText("Đang tạo...");
+        if (isEditMode) {
+            btnSubmit.setText("Đang cập nhật...");
+        } else {
+            btnSubmit.setText("Đang tạo...");
+        }
         btnSubmit.setEnabled(false);
 
         CreateListingRequest request = new CreateListingRequest();
@@ -829,10 +806,12 @@ public class CreateListingFragment extends Fragment implements LocationListener 
         int conditionPosition = spCondition.getSelectedItemPosition();
         if (conditionPosition > 0) {
             request.setConditionId(conditions.get(conditionPosition - 1).getId());
-        }        request.setLocationText(etLocation.getText().toString().trim());
+        }
+        
+        request.setLocationText(etLocation.getText().toString().trim());
         request.setLatitude(currentLatitude);
         request.setLongitude(currentLongitude);
-        request.setIsNegotiable(cbNegotiable.isChecked()); // Add negotiable field
+        request.setIsNegotiable(cbNegotiable.isChecked());
 
         String tagsText = etTags.getText().toString().trim();
         if (!tagsText.isEmpty()) {
@@ -848,52 +827,95 @@ public class CreateListingFragment extends Fragment implements LocationListener 
         }
 
         SharedPreferences prefs = getContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        long userId = prefs.getLong("userId", -1);
-
-        Call<ApiResponse> call = listingApiService.createListing(userId, request);
-        call.enqueue(new Callback<ApiResponse>() {
-            @Override
-            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        Object dataObj = apiResponse.getData();
-                        Long listingId = null;
-
-                        if (dataObj instanceof Integer) {
-                            listingId = ((Integer) dataObj).longValue();
-                        } else if (dataObj instanceof Long) {
-                            listingId = (Long) dataObj;
-                        } else if (dataObj instanceof Double) {
-                            listingId = ((Double) dataObj).longValue();
+        long userId = prefs.getLong("userId", -1);        if (isEditMode && editingListing != null) {
+            // Update existing listing
+            UpdateListingRequest updateRequest = new UpdateListingRequest();
+            updateRequest.setTitle(request.getTitle());
+            updateRequest.setDescription(request.getDescription());
+            updateRequest.setPrice(request.getPrice());
+            updateRequest.setCategoryId(request.getCategoryId());
+            updateRequest.setConditionId(request.getConditionId());
+            updateRequest.setLocationText(request.getLocationText());
+            updateRequest.setLatitude(request.getLatitude());
+            updateRequest.setLongitude(request.getLongitude());
+            updateRequest.setIsNegotiable(request.getIsNegotiable());
+            updateRequest.setTags(request.getTags());
+            
+            Call<ApiResponse> call = listingApiService.updateListing(editingListing.getId(), userId, updateRequest);
+            call.enqueue(new Callback<ApiResponse>() {
+                @Override
+                public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        ApiResponse apiResponse = response.body();
+                        if (apiResponse.isSuccess()) {
+                            // Upload images for the existing listing
+                            uploadImages(editingListing.getId(), userId);
+                        } else {
+                            btnSubmit.setText("Cập nhật");
+                            btnSubmit.setEnabled(true);
+                            Toast.makeText(getContext(), apiResponse.getMessage(), Toast.LENGTH_LONG).show();
                         }
+                    } else {
+                        btnSubmit.setText("Cập nhật");
+                        btnSubmit.setEnabled(true);
+                        handleErrorResponse(response);
+                    }
+                }
 
-                        if (listingId != null) {
-                            uploadImages(listingId, userId);
+                @Override
+                public void onFailure(Call<ApiResponse> call, Throwable t) {
+                    btnSubmit.setText("Cập nhật");
+                    btnSubmit.setEnabled(true);
+                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }else {
+            // Create new listing
+            Call<ApiResponse> call = listingApiService.createListing(userId, request);
+            call.enqueue(new Callback<ApiResponse>() {
+                @Override
+                public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        ApiResponse apiResponse = response.body();
+                        if (apiResponse.isSuccess()) {
+                            Object dataObj = apiResponse.getData();
+                            Long listingId = null;
+
+                            if (dataObj instanceof Integer) {
+                                listingId = ((Integer) dataObj).longValue();
+                            } else if (dataObj instanceof Long) {
+                                listingId = (Long) dataObj;
+                            } else if (dataObj instanceof Double) {
+                                listingId = ((Double) dataObj).longValue();
+                            }
+
+                            if (listingId != null) {
+                                uploadImages(listingId, userId);
+                            } else {
+                                btnSubmit.setText("Đăng tin");
+                                btnSubmit.setEnabled(true);
+                                Toast.makeText(getContext(), "Lỗi tạo listing", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
                             btnSubmit.setText("Đăng tin");
                             btnSubmit.setEnabled(true);
-                            Toast.makeText(getContext(), "Lỗi tạo listing", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), apiResponse.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     } else {
                         btnSubmit.setText("Đăng tin");
                         btnSubmit.setEnabled(true);
-                        Toast.makeText(getContext(), apiResponse.getMessage(), Toast.LENGTH_LONG).show();
+                        handleErrorResponse(response);
                     }
-                } else {
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse> call, Throwable t) {
                     btnSubmit.setText("Đăng tin");
                     btnSubmit.setEnabled(true);
-                    handleErrorResponse(response);
+                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse> call, Throwable t) {
-                btnSubmit.setText("Đăng tin");
-                btnSubmit.setEnabled(true);
-                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        }
     }
 
     private void uploadImages(Long listingId, Long userId) {
@@ -956,13 +978,15 @@ public class CreateListingFragment extends Fragment implements LocationListener 
             return;
         }
 
-        Log.d("CreateListing", "Uploading " + imageParts.size() + " image parts to server...");
-
-        Call<ApiResponse> call = listingApiService.uploadImages(listingId, userId, imageParts);
+        Log.d("CreateListing", "Uploading " + imageParts.size() + " image parts to server...");        Call<ApiResponse> call = listingApiService.uploadImages(listingId, userId, imageParts);
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
-                btnSubmit.setText("Đăng tin");
+                if (isEditMode) {
+                    btnSubmit.setText("Cập nhật");
+                } else {
+                    btnSubmit.setText("Đăng tin");
+                }
                 btnSubmit.setEnabled(true);
 
                 Log.d("CreateListing", "=== UPLOAD ALL IMAGES RESPONSE ===");
@@ -976,7 +1000,11 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                     Log.d("CreateListing", "Message: " + apiResponse.getMessage());
 
                     if (apiResponse.isSuccess()) {
-                        Toast.makeText(getContext(), "🎉 Đăng tin thành công!", Toast.LENGTH_LONG).show();
+                        if (isEditMode) {
+                            Toast.makeText(getContext(), "🎉 Cập nhật tin đăng thành công!", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "🎉 Đăng tin thành công!", Toast.LENGTH_LONG).show();
+                        }
                         clearForm();
                         if (getActivity() != null) {
                             getActivity().onBackPressed();
@@ -989,11 +1017,13 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                     Log.e("CreateListing", "Upload response not successful: " + response.code());
                     handleErrorResponse(response);
                 }
-            }
-
-            @Override
+            }            @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-                btnSubmit.setText("Đăng tin");
+                if (isEditMode) {
+                    btnSubmit.setText("Cập nhật");
+                } else {
+                    btnSubmit.setText("Đăng tin");
+                }
                 btnSubmit.setEnabled(true);
                 cleanupTempFiles(tempFiles);
                 Log.e("CreateListing", "Upload network error", t);
@@ -1098,9 +1128,7 @@ public class CreateListingFragment extends Fragment implements LocationListener 
                 }
             }
         }
-    }
-
-    private void clearForm() {
+    }    private void clearForm() {
         etTitle.setText("");
         etDescription.setText("");
         etPrice.setText("");
@@ -1109,6 +1137,7 @@ public class CreateListingFragment extends Fragment implements LocationListener 
 
         spCategory.setSelection(0);
         spCondition.setSelection(0);
+        cbNegotiable.setChecked(false);
 
         selectedImages.clear();
         imageAdapter.notifyDataSetChanged();
@@ -1116,6 +1145,11 @@ public class CreateListingFragment extends Fragment implements LocationListener 
 
         currentLatitude = null;
         currentLongitude = null;
+        
+        // Reset edit mode
+        isEditMode = false;
+        editingListing = null;
+        btnSubmit.setText("Đăng tin");
     }
 
     private void handleErrorResponse(Response<ApiResponse> response) {
@@ -1137,6 +1171,31 @@ public class CreateListingFragment extends Fragment implements LocationListener 
         }
         if (executorService != null) {
             executorService.shutdown();
+        }
+    }
+
+    // Static methods for creating instances
+    public static CreateListingFragment newInstance() {
+        return new CreateListingFragment();
+    }
+    
+    public static CreateListingFragment newInstanceForEdit(Listing listing) {
+        CreateListingFragment fragment = new CreateListingFragment();
+        Bundle args = new Bundle();
+        args.putString("editListing", new Gson().toJson(listing));
+        fragment.setArguments(args);
+        return fragment;
+    }
+    
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Check if we're in edit mode
+        if (getArguments() != null && getArguments().containsKey("editListing")) {
+            isEditMode = true;
+            String listingJson = getArguments().getString("editListing");
+            editingListing = new Gson().fromJson(listingJson, Listing.class);
         }
     }
 }

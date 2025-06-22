@@ -11,6 +11,8 @@ import com.example.ok.model.GoogleAuthRequest;
 import com.example.ok.model.PasswordResetRequest;
 import com.example.ok.model.PasswordUpdateRequest;
 import com.example.ok.model.CancelPaymentRequest;
+import com.example.ok.model.EmailVerificationRequest;
+import com.example.ok.model.VerifyCodeRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -55,8 +57,17 @@ public interface ApiService {
     @POST("api/users/{userId}/profile-image")
     Call<ApiResponse> uploadProfileImage(@Path("userId") Long userId, @Part MultipartBody.Part image);
     @PUT("api/users/{userId}/profile")
-    Call<ApiResponse> updateUserProfile(@Path("userId") Long userId, @Body UserProfileRequest request);
+    Call<ApiResponse> updateUserProfile(@Path("userId") Long userId, @Body UserProfileRequest request);    // Account management with email verification
+    @POST("api/users/send-verification")
+    Call<ApiResponse> sendAccountVerificationCode(@Body EmailVerificationRequest request);
+    
+    @POST("api/users/{userId}/deactivate")
+    Call<ApiResponse> deactivateAccountWithCode(@Path("userId") Long userId, @Body VerifyCodeRequest request);
 
+    @DELETE("api/users/{userId}")
+    Call<ApiResponse> deleteAccountWithCode(@Path("userId") Long userId, @Body VerifyCodeRequest request);
+    
+    // Legacy methods (keep for compatibility)
     @POST("api/users/{userId}/deactivate")
     Call<ApiResponse> deactivateAccount(@Path("userId") Long userId);
 

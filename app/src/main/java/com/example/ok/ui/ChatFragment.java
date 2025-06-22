@@ -1,11 +1,15 @@
 package com.example.ok.ui;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,17 +26,14 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-
-import com.example.ok.api.ApiService;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -41,19 +42,19 @@ import com.bumptech.glide.Glide;
 import com.example.ok.MainMenu;
 import com.example.ok.R;
 import com.example.ok.adapter.ChatAdapter;
-import com.example.ok.model.ApiResponse;
+import com.example.ok.api.ApiService;
 import com.example.ok.api.ChatApiService;
 import com.example.ok.api.RetrofitClient;
+import com.example.ok.utils.BlockedUserFilter;
+import com.example.ok.model.ApiResponse;
 import com.example.ok.model.BlockUserRequest;
 import com.example.ok.model.ChatMessage;
 import com.example.ok.model.ChatRoom;
-import com.google.gson.Gson;
-import com.example.ok.utils.BlockedUserFilter;
-import com.example.ok.util.NotificationHelper;
 
-import android.app.Activity;
-
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,13 +105,14 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
     
     // Services
     private ChatApiService chatApiService;
-      // Polling for new messages
-    private Handler messageHandler = new Handler(Looper.getMainLooper());
-    private Runnable messageRunnable;
-    private static final int POLLING_INTERVAL = 5000; // 5 seconds
     
-    // Notification helper for local notifications
-    private NotificationHelper notificationHelper;
+    // Notification management
+    private com.example.ok.util.ChatNotificationManager chatNotificationManager;
+    
+    // Polling for new messages
+    private Handler messageHandler = new Handler(Looper.getMainLooper());
+    private Runnable messageRunnable;    private static final int POLLING_INTERVAL_ACTIVE = 1000; // 1 second when active (faster real-time)
+    private static final int POLLING_INTERVAL_IDLE = 3000; // 3 seconds when idle (reduced from 5)
     
     // Track if fragment is visible to user
     private boolean isFragmentVisible = false;
@@ -118,6 +120,10 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
     // Add block status check variables
     private boolean isBlockedUser = false;
     private boolean hasCheckedBlockStatus = false;
+    
+    // Track last message timestamp for better polling
+    private long lastMessageTimestamp = 0;
+    private long lastActivityTime = 0;
     
     public static ChatFragment newInstance(long roomId, long myId, long otherId, String otherName) {
         return newInstance(roomId, myId, otherId, otherName, -1);
@@ -148,13 +154,14 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         if (myId == -1) {
             SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
             myId = prefs.getLong("userId", -1);
-        }
-          // Ensure RetrofitClient is initialized before using it
+        }        // Ensure RetrofitClient is initialized before using it
         RetrofitClient.init(requireContext());
         chatApiService = RetrofitClient.getChatApiService();
         
-        // Initialize notification helper
-        notificationHelper = new NotificationHelper(requireContext());
+        // Initialize chat notification manager
+        chatNotificationManager = new com.example.ok.util.ChatNotificationManager(requireContext());
+        
+        Log.d(TAG, "✅ ChatNotificationManager initialized successfully");
     }
 
     @Nullable
@@ -176,27 +183,29 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
     public void onResume() {
         super.onResume();
         isFragmentVisible = true;
+          // Clear notifications khi user mở chat
+        if (chatNotificationManager != null) {
+            chatNotificationManager.clearChatNotifications(roomId);
+        }
         
-        // Clear notifications khi user mở chat
-        clearNotificationsForThisChat();
-        
-        // 🔥 FIX: Restart polling nếu đã có messages và chat room ready
-        if (roomId != -1 && !messageList.isEmpty()) {
+        // 🔥 FIX: Restart polling nếu đã có room ID (không cần đợi messages)
+        if (roomId != -1) {
+            Log.d(TAG, "onResume: Starting message polling for room " + roomId);
             startMessagePolling();
         }
         
         Log.d(TAG, "Fragment resumed - fragment is now visible");
     }
-    
-    @Override
+      @Override
     public void onPause() {
         super.onPause();
         isFragmentVisible = false;
         
-        // 🔥 CRITICAL FIX: Dừng polling khi fragment không visible
-        stopMessagePolling();
+        // 🔥 CRITICAL FIX: KHÔNG dừng polling khi fragment pause
+        // Polling cần tiếp tục để có thể nhận tin nhắn và show notification
+        // chỉ thay đổi isFragmentVisible để logic notification hoạt động
         
-        Log.d(TAG, "Fragment paused - polling stopped");
+        Log.d(TAG, "Fragment paused - fragment is now NOT visible (polling continues for notifications)");
     }
     
     @Override
@@ -204,17 +213,17 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         super.onStop();
         isFragmentVisible = false;
         
-        // 🔥 Đảm bảo polling dừng hoàn toàn
-        stopMessagePolling();
+        // 🔥 Vẫn KHÔNG dừng polling ở onStop() vì user có thể quay lại
+        // Polling tiếp tục để nhận tin nhắn và show notification
         
-        Log.d(TAG, "Fragment stopped - ensuring polling is stopped");
+        Log.d(TAG, "Fragment stopped - fragment not visible but polling continues");
     }
     
     @Override
     public void onDestroy() {
         super.onDestroy();
         
-        // 🔥 Cleanup tất cả resources
+        // 🔥 CHỈ cleanup khi fragment thực sự bị destroy
         stopMessagePolling();
         
         // Clear handlers
@@ -228,13 +237,15 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         ImageButton btnBack = view.findViewById(R.id.btnBack);
         tvOtherUserName = view.findViewById(R.id.tvOtherUserName);
         ivOtherUserAvatar = view.findViewById(R.id.ivOtherUserAvatar);
-          // Listing info
+        
+        // Listing info
         layoutListing = view.findViewById(R.id.layoutListing);
         ivListingImage = view.findViewById(R.id.ivListingImage);
         tvListingTitle = view.findViewById(R.id.tvListingTitle);
         tvListingPrice = view.findViewById(R.id.tvListingPrice);
         btnViewListing = view.findViewById(R.id.btnViewListing);
-          // Chat
+        
+        // Chat
         recyclerMessages = view.findViewById(R.id.recyclerMessages);
         etMessage = view.findViewById(R.id.etMessage);
         btnSend = view.findViewById(R.id.btnSend);
@@ -246,11 +257,27 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
         recyclerMessages.setLayoutManager(layoutManager);
-          chatAdapter = new ChatAdapter(requireContext(), messageList, myId);
+        
+        chatAdapter = new ChatAdapter(requireContext(), messageList, myId);
         recyclerMessages.setAdapter(chatAdapter);
         
-        // 🔥 Set action listener cho sửa/xóa tin nhắn
-        chatAdapter.setOnMessageActionListener(this);
+        // 🔥 THÊM: Implement OnMessageActionListener cho edit/delete tin nhắn
+        chatAdapter.setOnMessageActionListener(new ChatAdapter.OnMessageActionListener() {
+            @Override
+            public void onEditMessage(ChatMessage message, int position) {
+                showEditMessageDialog(message, position);
+            }
+
+            @Override
+            public void onDeleteMessage(ChatMessage message, int position) {
+                showDeleteMessageConfirmDialog(message, position);
+            }
+
+            @Override
+            public void onCopyMessage(ChatMessage message) {
+                copyMessageToClipboard(message);
+            }
+        });
         
         // Set initial UI values
         tvOtherUserName.setText(otherName);
@@ -270,17 +297,57 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         btnViewListing.setOnClickListener(v -> navigateToListing());
         
         // Pull to refresh
-        swipeRefresh.setOnRefreshListener(this::loadMoreMessages);
-          // **TEMPORARY: Add test notification on double-tap of other user name**
+        swipeRefresh.setOnRefreshListener(this::loadMoreMessages);        // **ENHANCED: Add test notification with better debug info**
         tvOtherUserName.setOnClickListener(v -> {
-            Log.d(TAG, "User name clicked - triggering test notification");
-            testNotificationManually();
+            Log.d(TAG, "=== USER NAME CLICKED - TEST NOTIFICATION ===");
+            Log.d(TAG, "Other user name: " + otherName);
+            Log.d(TAG, "Room ID: " + roomId);
+            Log.d(TAG, "ChatNotificationManager: " + (chatNotificationManager != null ? "AVAILABLE" : "NULL"));
+            
+            if (chatNotificationManager != null) {
+                // First show debug status
+                chatNotificationManager.debugNotificationStatus();
+                
+                // Then show test notification
+                chatNotificationManager.showTestNotification("🔔 Test từ " + otherName + " (Room " + roomId + ")");
+
+                // Also test chat notification simulation
+                List<ChatMessage> testMessages = new ArrayList<>();
+                ChatMessage testMsg = new ChatMessage(roomId, otherId, myId, "Đây là tin nhắn test notification!", "TEXT");
+                testMsg.setId(999999L);
+                testMsg.setTimestamp(System.currentTimeMillis());
+                testMessages.add(testMsg);
+                
+                Log.d(TAG, "🔔 Testing chat notification simulation...");
+                chatNotificationManager.showChatNotification(roomId, otherName, testMessages, myId, otherId);
+                
+                Toast.makeText(requireContext(), "✅ Test notifications sent!", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.e(TAG, "❌ ChatNotificationManager is NULL!");
+                Toast.makeText(requireContext(), "❌ Notification manager chưa khởi tạo", Toast.LENGTH_LONG).show();
+            }
+            
+            Log.d(TAG, "=== END TEST NOTIFICATION ===");
         });
         
         // Long click for report options
         tvOtherUserName.setOnLongClickListener(v -> {
             showChatReportOptions();
             return true;
+        });
+        
+        // 🔥 DEBUG: Double click để force notification test (ngay cả khi fragment visible)
+        tvOtherUserName.setOnClickListener(new View.OnClickListener() {
+            private long lastClickTime = 0;
+            
+            @Override
+            public void onClick(View v) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastClickTime < 500) { // Double click trong 500ms
+                    showDebugNotificationMenu();
+                }
+                lastClickTime = currentTime;
+            }
         });
         
         // Scroll listener for pagination
@@ -311,8 +378,7 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         Log.d(TAG, "Auth token available: " + (!authToken.isEmpty()));
         Log.d(TAG, "Auth token length: " + authToken.length());
         if (!authToken.isEmpty()) {
-            Log.d(TAG, "Auth token preview: " + authToken.substring(0, Math.min(10, authToken.length())) + "...");
-        }
+            Log.d(TAG, "Auth token preview: " + authToken.substring(0, Math.min(10, authToken.length())) + "...");        }
         
         if (roomId != -1) {
             // Room ID provided, just load messages
@@ -449,10 +515,24 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     List<ChatMessage> newMessages = response.body();
                     
                     Log.d(TAG, "Successfully loaded " + newMessages.size() + " messages using direct array parsing");
-                    
-                    if (newMessages.isEmpty()) {
+                      if (newMessages.isEmpty()) {
                         canLoadMore = false;
-                        Log.d(TAG, "No messages found, starting with empty chat");                    } else {
+                        Log.d(TAG, "No messages found, starting with empty chat");
+                        
+                        // 🔥 FIX: Start polling even when no messages initially
+                        if (isFragmentVisible) {
+                            Log.d(TAG, "Starting polling for empty chat room");
+                            startMessagePolling();
+                        }                    } else {
+                        // Process messages and ensure imageUrl is set for IMAGE types
+                        for (ChatMessage message : newMessages) {
+                            if ("IMAGE".equals(message.getType()) && message.getContent() != null) {
+                                // For IMAGE messages, ensure imageUrl is set from content
+                                message.setImageUrl(message.getContent());
+                                Log.d(TAG, "📸 Set imageUrl for IMAGE message: " + message.getContent());
+                            }
+                        }
+                        
                         // Add to the beginning of the list
                         messageList.addAll(0, newMessages);
                         chatAdapter.notifyDataSetChanged();
@@ -471,6 +551,7 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     if (currentPage == 1) {
                         // 🔥 FIX: Chỉ bắt đầu polling khi fragment visible
                         if (isFragmentVisible) {
+                            Log.d(TAG, "Starting polling after loading " + newMessages.size() + " messages");
                             startMessagePolling();
                         }
                     }} else if (response.code() == 403) {
@@ -593,15 +674,19 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
             Toast.makeText(getContext(), "Không thể gửi tin nhắn cho người dùng này", Toast.LENGTH_SHORT).show();
             return;
         }
+          Log.d(TAG, "Proceeding with message send");
         
-        Log.d(TAG, "Proceeding with message send");
+        // Track activity time for adaptive polling
+        lastActivityTime = System.currentTimeMillis();
         
         // Clear input field and hide keyboard
         etMessage.setText("");
         hideKeyboard();
-        
-        // Create message
+          // Create message với temporary ID để tránh duplicate
         ChatMessage newMessage = new ChatMessage(roomId, myId, otherId, messageText, "TEXT");
+        // Set temporary ID để nhận diện optimistic message
+        newMessage.setId(-System.currentTimeMillis()); // Negative temporary ID
+        newMessage.setTimestamp(System.currentTimeMillis());
           // Add to UI immediately (optimistic UI update)
         messageList.add(newMessage);
         chatAdapter.notifyItemInserted(messageList.size() - 1);
@@ -624,15 +709,23 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                 if (response.isSuccessful() && response.body() != null) {
                     // 🔥 FIX: Update optimistic message với server data
                     ChatMessage serverMessage = response.body();
-                    int lastIndex = messageList.size() - 1;
-                    if (lastIndex >= 0) {
-                        // Cập nhật message với ID từ server
-                        ChatMessage optimisticMessage = messageList.get(lastIndex);
-                        optimisticMessage.setId(serverMessage.getId());
-                        optimisticMessage.setCreatedAt(serverMessage.getCreatedAt());
-                        
-                        chatAdapter.notifyItemChanged(lastIndex);
-                        Log.d(TAG, "✅ Message sent successfully with ID: " + serverMessage.getId());
+                    
+                    // Find and update the optimistic message
+                    for (int i = messageList.size() - 1; i >= 0; i--) {
+                        ChatMessage msg = messageList.get(i);
+                        if (msg.getId() != null && msg.getId() < 0 && 
+                            msg.getContent().equals(messageText) &&
+                            msg.getSenderId().equals(myId)) {
+                            // Update với data từ server
+                            msg.setId(serverMessage.getId());                            msg.setCreatedAt(serverMessage.getCreatedAt());
+                            msg.setTimestamp(serverMessage.getTimestamp() != null ? 
+                                serverMessage.getTimestamp() : System.currentTimeMillis());
+                            
+
+                            chatAdapter.notifyItemChanged(i);
+                            Log.d(TAG, "✅ Message sent successfully with ID: " + serverMessage.getId());
+                            break;
+                        }
                     }
                 } else {
                     // Message failed - show error and remove optimistic message
@@ -640,38 +733,53 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     Log.e(TAG, "Failed to send message: " + response.code());
                     Toast.makeText(getContext(), "Không thể gửi tin nhắn", Toast.LENGTH_SHORT).show();
                     
-                    // Remove the failed message from UI
-                    int lastIndex = messageList.size() - 1;
-                    if (lastIndex >= 0) {
-                        messageList.remove(lastIndex);
-                        chatAdapter.notifyItemRemoved(lastIndex);
+                    // Remove the failed optimistic message
+                    for (int i = messageList.size() - 1; i >= 0; i--) {
+                        ChatMessage msg = messageList.get(i);
+                        if (msg.getId() != null && msg.getId() < 0 && 
+                            msg.getContent().equals(messageText) &&
+                            msg.getSenderId().equals(myId)) {
+                            messageList.remove(i);
+                            chatAdapter.notifyItemRemoved(i);
+                            break;
+                        }
                     }
                 }
             }
-            
-            @Override
+              @Override
             public void onFailure(@NonNull Call<ChatMessage> call, @NonNull Throwable t) {
                 if (!isAdded() || getContext() == null) return;
                 Log.e(TAG, "Network error sending message", t);
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 
-                // Remove the failed message from UI
-                int lastIndex = messageList.size() - 1;
-                if (lastIndex >= 0) {
-                    messageList.remove(lastIndex);
-                    chatAdapter.notifyItemRemoved(lastIndex);
+                // Remove the failed optimistic message
+                for (int i = messageList.size() - 1; i >= 0; i--) {
+                    ChatMessage msg = messageList.get(i);
+                    if (msg.getId() != null && msg.getId() < 0 && 
+                        msg.getContent().equals(messageText) &&
+                        msg.getSenderId().equals(myId)) {
+                        messageList.remove(i);
+                        chatAdapter.notifyItemRemoved(i);
+                        break;
+                    }
                 }
             }
         });
-    }
-      private void showAttachmentOptions() {
-        if (roomId == -1) return;
+    }      private void showAttachmentOptions() {
+        Log.d(TAG, "=== ATTACHMENT OPTIONS CLICKED ===");
+        Log.d(TAG, "Room ID: " + roomId);
+        
+        if (roomId == -1) {
+            Log.e(TAG, "❌ Cannot show attachment options - invalid room ID");
+            return;
+        }
         
         String[] options = {"Chọn ảnh từ thư viện", "Chụp ảnh", "Hủy"};
         
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Gửi hình ảnh");
         builder.setItems(options, (dialog, which) -> {
+            Log.d(TAG, "Attachment option selected: " + which + " (" + options[which] + ")");
             switch (which) {
                 case 0:
                     // Choose image from gallery
@@ -683,25 +791,273 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     break;
                 case 2:
                     // Cancel
+                    Log.d(TAG, "User cancelled attachment selection");
                     dialog.dismiss();
                     break;
             }
         });
+        
+        Log.d(TAG, "Showing attachment options dialog...");
         builder.show();
     }
-    
-    private void selectImageFromGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, REQUEST_SELECT_IMAGE);
+      private void selectImageFromGallery() {
+        Log.d(TAG, "=== SELECT IMAGE FROM GALLERY ===");
+        try {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            intent.setType("image/*");
+            Log.d(TAG, "Starting gallery intent with REQUEST_SELECT_IMAGE (" + REQUEST_SELECT_IMAGE + ")");
+            startActivityForResult(intent, REQUEST_SELECT_IMAGE);
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting gallery intent", e);
+            Toast.makeText(getContext(), "Không thể mở thư viện ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void takePhoto() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-    }      private void sendImageMessage(Uri imageUri) {        if (roomId == -1 || imageUri == null) return;
+        Log.d(TAG, "=== TAKE PHOTO ===");
+        try {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            Log.d(TAG, "Starting camera intent with REQUEST_TAKE_PHOTO (" + REQUEST_TAKE_PHOTO + ")");
+            startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting camera intent", e);
+            Toast.makeText(getContext(), "Không thể mở camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();        }
+    }
+    
+    private void sendImageMessage(Uri imageUri) {
+        Log.d(TAG, "=== SEND IMAGE MESSAGE START ===");
+        Log.d(TAG, "Image URI: " + imageUri);
+        Log.d(TAG, "Room ID: " + roomId);
+        Log.d(TAG, "My ID: " + myId + ", Other ID: " + otherId);
+        Log.d(TAG, "Is blocked user: " + isBlockedUser);
         
-        // TODO: Re-implement image sending functionality
-        Toast.makeText(getContext(), "Tính năng gửi ảnh đang được phát triển", Toast.LENGTH_SHORT).show();
+        if (roomId == -1 || imageUri == null) {
+            Log.e(TAG, "❌ Cannot send image - invalid parameters");
+            Log.e(TAG, "Room ID valid: " + (roomId != -1));
+            Log.e(TAG, "Image URI valid: " + (imageUri != null));
+            return;
+        }
+          // Check if user is blocked
+        if (isBlockedUser) {
+            Log.d(TAG, "❌ Blocked user - preventing image send");
+            Toast.makeText(getContext(), "Không thể gửi hình ảnh cho người dùng này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Show progress while uploading
+        Log.d(TAG, "📤 Starting image upload process...");
+        Toast.makeText(getContext(), "Đang gửi hình ảnh...", Toast.LENGTH_SHORT).show();
+        
+        try {
+            Log.d(TAG, "🔧 Creating multipart request...");
+            // 🔥 FIX: Use ContentResolver instead of direct file access to avoid permission issues
+            String fileName = getFileNameFromUri(imageUri);
+            Log.d(TAG, "File name: " + fileName);
+            
+            RequestBody requestFile = createRequestBodyFromUri(imageUri);
+            Log.d(TAG, "✅ RequestBody created successfully");
+              MultipartBody.Part imagePart = MultipartBody.Part.createFormData("imageFile", fileName, requestFile);
+            Log.d(TAG, "✅ MultipartBody.Part created successfully");
+            
+            // Track activity time for adaptive polling
+            lastActivityTime = System.currentTimeMillis();
+              // Create optimistic message for UI
+            ChatMessage optimisticMessage = new ChatMessage(roomId, myId, otherId, "[Đang gửi hình ảnh...]", "IMAGE");
+            optimisticMessage.setId(-System.currentTimeMillis()); // Negative temporary ID
+            optimisticMessage.setTimestamp(System.currentTimeMillis());
+            optimisticMessage.setImageUrl(imageUri.toString()); // Temporary local URI
+            
+            Log.d(TAG, "🎭 OPTIMISTIC MESSAGE CREATED:");
+            Log.d(TAG, "  - Content: '" + optimisticMessage.getContent() + "'");
+            Log.d(TAG, "  - ImageUrl: '" + optimisticMessage.getImageUrl() + "'");
+            Log.d(TAG, "  - Type: '" + optimisticMessage.getType() + "'");
+            Log.d(TAG, "  - isImage(): " + optimisticMessage.isImage());
+            
+            // Add to UI immediately
+            messageList.add(optimisticMessage);
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            recyclerMessages.smoothScrollToPosition(messageList.size() - 1);
+              // Send to server - Use correct API with query parameters
+            chatApiService.sendImageMessage((long)roomId, (long)myId, imagePart).enqueue(new Callback<ApiResponse>() {                @Override
+                public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                    Log.d(TAG, "Send image response code: " + response.code());
+                    
+                    if (response.isSuccessful() && response.body() != null) {
+                        ApiResponse apiResponse = response.body();
+                        Log.d(TAG, "API Response success: " + apiResponse.isSuccess());
+                        
+                        if (apiResponse.isSuccess() && apiResponse.getData() != null) {
+                            // Parse the data as ChatMessage
+                            try {
+                                // The data should contain the ChatMessage with imageUrl in content field
+                                Object data = apiResponse.getData();
+                                Log.d(TAG, "✅ Image uploaded successfully, data: " + data.toString());
+                                
+                                // Find and update the optimistic message
+                                for (int i = messageList.size() - 1; i >= 0; i--) {
+                                    ChatMessage msg = messageList.get(i);
+                                    if (msg.getId() != null && msg.getId() < 0 && 
+                                        msg.getSenderId().equals(myId) && 
+                                        msg.getType().equals("IMAGE")) {
+                                        
+                                        // For image messages, server returns imageUrl in content field
+                                        if (data instanceof Map) {
+                                            Map<String, Object> messageData = (Map<String, Object>) data;
+                                            String serverImageUrl = (String) messageData.get("content");
+                                            Long serverId = ((Number) messageData.get("id")).longValue();
+                                            
+                                            // Update with server data
+                                            msg.setId(serverId);
+                                            msg.setImageUrl(serverImageUrl); // Set imageUrl for proper display
+                                            msg.setContent(serverImageUrl); // Also set content for compatibility
+                                            msg.setTimestamp(System.currentTimeMillis());
+                                            
+                                            chatAdapter.notifyItemChanged(i);
+                                            Log.d(TAG, "✅ Image sent successfully with ID: " + serverId);
+                                            Log.d(TAG, "✅ Server image URL: " + serverImageUrl);
+                                            Toast.makeText(getContext(), "Hình ảnh đã được gửi", Toast.LENGTH_SHORT).show();
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing server response", e);
+                                Toast.makeText(getContext(), "Lỗi xử lý phản hồi từ server", Toast.LENGTH_SHORT).show();
+                                removeFailedOptimisticMessage();
+                            }                        } else {
+                            String errorMsg = apiResponse.getMessage();
+                            Log.e(TAG, "API response indicates failure: " + errorMsg);
+                            Toast.makeText(getContext(), "Lỗi: " + (errorMsg != null ? errorMsg : "Không thể gửi hình ảnh"), Toast.LENGTH_SHORT).show();
+                            removeFailedOptimisticMessage();
+                        }
+                    } else {
+                        // Image failed - show error and remove optimistic message
+                        if (!isAdded() || getContext() == null) return;
+                        Log.e(TAG, "Failed to send image: " + response.code());
+                        Toast.makeText(getContext(), "Không thể gửi hình ảnh", Toast.LENGTH_SHORT).show();
+                        removeFailedOptimisticMessage();
+                    }
+                }
+                
+                @Override
+                public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                    if (!isAdded() || getContext() == null) return;
+                    Log.e(TAG, "Network error sending image", t);
+                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    removeFailedOptimisticMessage();
+                }
+            });
+              } catch (Exception e) {
+            Log.e(TAG, "❌ CRITICAL ERROR in sendImageMessage", e);
+            Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+            Log.e(TAG, "Error message: " + e.getMessage());
+            Log.e(TAG, "Error cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+            
+            if (!isAdded() || getContext() == null) {
+                Log.e(TAG, "Fragment not added or context null during error handling");
+                return;
+            }
+            
+            // Show detailed error message
+            String errorMsg = "Lỗi xử lý hình ảnh: " + e.getMessage();
+            if (e.getCause() != null) {
+                errorMsg += " (" + e.getCause().getMessage() + ")";
+            }
+            Toast.makeText(getContext(), errorMsg, Toast.LENGTH_LONG).show();
+            
+            Log.d(TAG, "❌ Image send failed during setup - no cleanup needed");
+        }
+    }
+    
+    // Helper method to get real path from URI    // 🔥 FIX: Create RequestBody from URI using ContentResolver (no file permissions needed)
+    private RequestBody createRequestBodyFromUri(Uri uri) {
+        Log.d(TAG, "🔧 Creating RequestBody from URI: " + uri);
+        try {
+            Log.d(TAG, "📂 Opening InputStream from ContentResolver...");
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+            if (inputStream == null) {
+                throw new IOException("Cannot open input stream for URI: " + uri);
+            }
+            
+            Log.d(TAG, "📊 Reading InputStream to bytes...");
+            byte[] bytes = readInputStreamToBytes(inputStream);
+            inputStream.close();
+            
+            Log.d(TAG, "✅ Successfully read " + bytes.length + " bytes from image");
+            Log.d(TAG, "🔧 Creating RequestBody with MediaType image/*...");
+            
+            RequestBody requestBody = RequestBody.create(MediaType.parse("image/*"), bytes);
+            Log.d(TAG, "✅ RequestBody created successfully");
+            
+            return requestBody;
+        } catch (Exception e) {
+            Log.e(TAG, "❌ FATAL ERROR creating RequestBody from URI: " + uri, e);
+            Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+            Log.e(TAG, "Error message: " + e.getMessage());
+            Log.e(TAG, "Error cause: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+            throw new RuntimeException("Failed to read image file", e);
+        }
+    }
+      // Helper method to read InputStream to byte array
+    private byte[] readInputStreamToBytes(InputStream inputStream) throws IOException {
+        Log.d(TAG, "📊 Starting to read InputStream to bytes...");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        long totalBytes = 0;
+        
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+            totalBytes += nRead;
+            
+            // Log progress for large files
+            if (totalBytes % (1024 * 1024) == 0) {
+                Log.d(TAG, "📊 Read " + (totalBytes / (1024 * 1024)) + "MB so far...");
+            }
+        }
+        
+        byte[] result = buffer.toByteArray();
+        Log.d(TAG, "✅ Finished reading InputStream: " + result.length + " bytes total");
+        return result;
+    }
+    
+    // Get filename from URI using ContentResolver
+    private String getFileNameFromUri(Uri uri) {
+        String fileName = "image.jpg"; // Default filename
+        try {
+            Cursor cursor = requireContext().getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                int nameIndex = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
+                if (nameIndex >= 0 && cursor.moveToFirst()) {
+                    fileName = cursor.getString(nameIndex);
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not get filename from URI, using default: " + e.getMessage());
+        }
+        
+        // Ensure filename has extension
+        if (!fileName.contains(".")) {
+            fileName += ".jpg";
+        }
+        
+        return fileName;
+    }
+    
+    // DEPRECATED: Remove old method that causes permission issues
+    @Deprecated
+    private String getRealPathFromURI(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String path = cursor.getString(column_index);
+            cursor.close();
+            return path;
+        }
+        return uri.getPath();
     }
     
       private void navigateToListing() {
@@ -740,51 +1096,94 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         } else {
             Log.e(TAG, "Token test FAILED - no valid token found");
         }
-    }    private void startMessagePolling() {
+    }
+    
+    private void startMessagePolling() {
         // 🔥 FIX: Dừng polling cũ trước khi bắt đầu polling mới
         stopMessagePolling();
         
-        Log.d(TAG, "Starting message polling for room: " + roomId);
-        
-        messageRunnable = new Runnable() {
+        Log.d(TAG, "🔄 Starting message polling for room: " + roomId + " (fragment visible: " + isFragmentVisible + ")");
+          messageRunnable = new Runnable() {
             @Override
             public void run() {
-                // 🔥 FIX: Kiểm tra fragment state và visibility trước khi poll
-                if (!isAdded() || roomId == -1 || !isFragmentVisible) {
-                    Log.d(TAG, "Polling cancelled - fragment not ready or not visible");
+                // 🔥 FIX: Kiểm tra fragment state NHƯNG KHÔNG kiểm tra visibility
+                // Polling tiếp tục ngay cả khi fragment không visible để có thể show notification
+                if (!isAdded() || roomId == -1) {
+                    Log.d(TAG, "❌ Polling cancelled - fragment state: isAdded=" + isAdded() + 
+                          ", roomId=" + roomId);
                     return;
                 }
+                
+                Log.d(TAG, "📡 Polling for new messages... (visible: " + isFragmentVisible + ")");
                 
                 // Get latest message ID - use safe method
                 final long latestMessageId = !messageList.isEmpty() ? 
                     messageList.get(messageList.size() - 1).getIdSafely() : 0;
-                  
-                // Poll for new messages
+                
+                Log.d(TAG, "📡 Checking for messages after ID: " + latestMessageId);
+                    // Poll for new messages
                 chatApiService.getChatMessagesDirect(roomId, myId).enqueue(new Callback<List<ChatMessage>>() {
                     @Override
                     public void onResponse(@NonNull Call<List<ChatMessage>> call, @NonNull Response<List<ChatMessage>> response) {
-                        // 🔥 FIX: Kiểm tra fragment state trước khi xử lý response
-                        if (!isAdded() || !isFragmentVisible) {
-                            Log.d(TAG, "Fragment not visible, skipping poll response");
+                        // 🔥 FIX: KHÔNG skip response khi fragment không visible - cần process để show notification
+                        if (!isAdded()) {
+                            Log.d(TAG, "Fragment not added, skipping poll response");
                             return;
                         }
                         
                         if (response.isSuccessful() && response.body() != null) {
-                            List<ChatMessage> newMessages = response.body();
-                            
-                            // 🔥 FIX: Lọc tin nhắn mới và kiểm tra duplicate với optimistic UI
+                            List<ChatMessage> newMessages = response.body();                            // 🔥 FIX: Lọc tin nhắn mới và kiểm tra duplicate với optimistic UI
                             List<ChatMessage> messagesToAdd = new ArrayList<>();
                             for (ChatMessage message : newMessages) {
+                                // Skip messages with negative IDs (optimistic messages)
+                                if (message.getId() != null && message.getId() < 0) {
+                                    continue;
+                                }
+                                
                                 if (message.getIdSafely() > latestMessageId && !isDuplicateMessage(message)) {
+                                    // 📸 FIX: Ensure imageUrl is set for IMAGE messages from polling
+                                    if ("IMAGE".equals(message.getType()) && message.getContent() != null) {
+                                        message.setImageUrl(message.getContent());
+                                        Log.d(TAG, "📸 Set imageUrl for polled IMAGE message: " + message.getContent());
+                                    }
                                     messagesToAdd.add(message);
                                 }
                             }
                             
+
                             // Add new messages to UI
                             if (!messagesToAdd.isEmpty()) {
-                                int insertPosition = messageList.size();
-                                messageList.addAll(messagesToAdd);
-                                chatAdapter.notifyItemRangeInserted(insertPosition, messagesToAdd.size());
+                                // 🔥 FIX: Chỉ update UI khi fragment visible
+                                if (isFragmentVisible) {
+                                    // Remove any optimistic messages that are now confirmed by server
+                                    for (ChatMessage newMsg : messagesToAdd) {
+                                        if (newMsg.getSenderId().equals(myId)) {
+                                            // Remove matching optimistic message
+                                            for (int i = messageList.size() - 1; i >= 0; i--) {
+                                                ChatMessage existingMsg = messageList.get(i);
+                                                if (existingMsg.getId() != null && existingMsg.getId() < 0 &&
+                                                    existingMsg.getContent().equals(newMsg.getContent()) &&
+                                                    existingMsg.getSenderId().equals(newMsg.getSenderId())) {
+                                                    messageList.remove(i);
+                                                    chatAdapter.notifyItemRemoved(i);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    int insertPosition = messageList.size();
+                                    messageList.addAll(messagesToAdd);
+                                    chatAdapter.notifyItemRangeInserted(insertPosition, messagesToAdd.size());
+                                } else {
+                                    // Khi không visible, vẫn cần add vào messageList để tránh duplicate
+                                    messageList.addAll(messagesToAdd);                                }
+                                
+
+                                // 🔥 FIX: Track activity when receiving new messages for faster polling
+                                lastActivityTime = System.currentTimeMillis();
+                                
+                                Log.d(TAG, "Added " + messagesToAdd.size() + " new messages from polling - updating activity time");
                                 
                                 // Smooth scroll to bottom if fragment is visible
                                 if (isFragmentVisible) {
@@ -795,36 +1194,58 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                                     // Mark messages as read if user is viewing the chat
                                     markMessagesAsRead();
                                 } else {
-                                    // Show local notification if fragment is not visible
-                                    showNewMessageNotification(messagesToAdd);
+                                    // Show notification for new messages when fragment is not visible
+                                    if (chatNotificationManager != null) {
+                                        Log.d(TAG, "🔔 Fragment NOT visible - showing notification for " + messagesToAdd.size() + " messages");
+                                        chatNotificationManager.showChatNotification(
+                                            roomId, otherName, messagesToAdd, myId, otherId
+                                        );
+                                    } else {
+                                        Log.e(TAG, "❌ ChatNotificationManager is NULL - cannot show notification");
+                                    }
                                 }
                                 
                                 Log.d(TAG, "Added " + messagesToAdd.size() + " new messages from polling");
                             }
                         }
                         
-                        // 🔥 FIX: Chỉ schedule poll tiếp theo nếu fragment vẫn visible
-                        if (isAdded() && isFragmentVisible && messageRunnable != null) {
-                            messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
+                        // 🔥 FIX: Schedule poll tiếp theo nếu fragment vẫn added (KHÔNG check visibility)
+                        if (isAdded() && messageRunnable != null) {
+                            // Use shorter interval if there was recent activity
+                            long currentTime = System.currentTimeMillis();
+                            boolean isActiveChat = (currentTime - lastActivityTime) < 30000; // 30 seconds
+                            // Use longer interval when not visible to save battery
+                            int interval = isFragmentVisible && isActiveChat ? POLLING_INTERVAL_ACTIVE : POLLING_INTERVAL_IDLE;
+                            
+                            Log.d(TAG, "⏰ Scheduling next poll in " + interval + "ms (visible: " + isFragmentVisible + ", active: " + isActiveChat + ")");
+                            messageHandler.postDelayed(messageRunnable, interval);
+                        } else {
+                            Log.d(TAG, "❌ NOT scheduling next poll - fragment not added or messageRunnable null");
                         }
                     }
-                    
+
                     @Override
                     public void onFailure(@NonNull Call<List<ChatMessage>> call, @NonNull Throwable t) {
-                        Log.e(TAG, "Error polling for messages", t);
+                        Log.e(TAG, "❌ Error polling for messages: " + t.getMessage());
                         
-                        // 🔥 FIX: Chỉ schedule poll tiếp theo nếu fragment vẫn visible
-                        if (isAdded() && isFragmentVisible && messageRunnable != null) {
-                            messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL);
+                        // 🔥 FIX: Schedule retry poll nếu fragment vẫn added (KHÔNG check visibility)
+                        if (isAdded() && messageRunnable != null) {
+                            // Use longer interval on error
+                            Log.d(TAG, "⏰ Scheduling retry poll in " + POLLING_INTERVAL_IDLE + "ms after error");
+                            messageHandler.postDelayed(messageRunnable, POLLING_INTERVAL_IDLE);
+                        } else {
+                            Log.d(TAG, "❌ NOT scheduling retry poll - fragment not added or messageRunnable null");
                         }
                     }
                 });
             }
         };
         
-        // Start polling với delay nhỏ để tránh conflict với optimistic UI
-        messageHandler.postDelayed(messageRunnable, 1000); // 1 second delay
-    }    private void stopMessagePolling() {
+        // Start polling với delay ngắn hơn để có realtime tốt hơn
+        messageHandler.postDelayed(messageRunnable, 200); // 0.2 second delay for faster start
+    }
+    
+    private void stopMessagePolling() {
         Log.d(TAG, "Stopping message polling");
         
         if (messageHandler != null && messageRunnable != null) {
@@ -834,18 +1255,38 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         
         Log.d(TAG, "Message polling stopped successfully");
     }
-    
-    // 🔥 FIX: Thêm method để kiểm tra duplicate message
+      // 🔥 FIX: Thêm method để kiểm tra duplicate message với logic tốt hơn
     private boolean isDuplicateMessage(ChatMessage newMessage) {
-        if (newMessage == null || newMessage.getId() == null) {
+        if (newMessage == null) {
             return false;
         }
         
-        // Kiểm tra xem message này đã tồn tại trong messageList chưa
-        for (ChatMessage existingMessage : messageList) {
-            if (existingMessage.getId() != null && 
-                existingMessage.getId().equals(newMessage.getId())) {
-                return true;
+        // Kiểm tra duplicate bằng ID nếu có
+        if (newMessage.getId() != null) {
+            for (ChatMessage existingMessage : messageList) {
+                if (existingMessage.getId() != null && 
+                    existingMessage.getId().equals(newMessage.getId())) {
+                    return true;
+                }
+            }
+        }
+        
+        // Kiểm tra duplicate bằng nội dung và thời gian (cho optimistic UI)
+        if (newMessage.getContent() != null && newMessage.getSenderId() != null) {
+            long newMessageTime = System.currentTimeMillis();
+            for (ChatMessage existingMessage : messageList) {
+                if (existingMessage.getContent() != null && 
+                    existingMessage.getSenderId() != null &&
+                    existingMessage.getContent().equals(newMessage.getContent()) &&
+                    existingMessage.getSenderId().equals(newMessage.getSenderId())) {
+                    
+                    // Check if messages are very close in time (within 10 seconds)
+                    long timeDiff = Math.abs(newMessageTime - (existingMessage.getTimestamp() != null ? 
+                        existingMessage.getTimestamp() : System.currentTimeMillis()));
+                    if (timeDiff < 10000) { // 10 seconds
+                        return true;
+                    }
+                }
             }
         }
         
@@ -860,19 +1301,18 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
             Log.d(TAG, "No new messages to notify about");
             return;
         }
-        
-        Log.d(TAG, "=== NOTIFICATION DEBUG ===");
+          Log.d(TAG, "=== NOTIFICATION DEBUG ===");
         Log.d(TAG, "New messages count: " + newMessages.size());
         Log.d(TAG, "Fragment visible: " + isFragmentVisible);
-        Log.d(TAG, "NotificationHelper available: " + (notificationHelper != null));
+        // Log.d(TAG, "NotificationHelper available: " + (notificationHelper != null));
         
-        // Check if message notifications are enabled
-        if (!notificationHelper.isNotificationEnabled(NotificationHelper.NOTIF_MESSAGES)) {
-            Log.d(TAG, "Message notifications are DISABLED in settings");
-            return;
-        } else {
-            Log.d(TAG, "Message notifications are ENABLED in settings");
-        }
+        // Check if message notifications are enabled - DISABLED for now
+        // if (!notificationHelper.isNotificationEnabled(NotificationHelper.NOTIF_MESSAGES)) {
+        //     Log.d(TAG, "Message notifications are DISABLED in settings");
+        //     return;
+        // } else {
+        //     Log.d(TAG, "Message notifications are ENABLED in settings");
+        // }
         
         // **TEMPORARY DEBUG: Always show notification regardless of fragment visibility**
         Log.d(TAG, "Showing notification (DEBUG MODE - ignoring fragment visibility)");
@@ -910,9 +1350,8 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     // Limit content length
                     if (content.length() > 50) {
                         content = content.substring(0, 47) + "...";
-                    }
-                } else if (latestMessage.isImage()) {
-                    content = getString(R.string.image_message_notification_text);
+                    }                } else if (latestMessage.isImage()) {
+                    content = "Đã gửi một hình ảnh";
                 } else {
                     content = "Tin nhắn mới";
                 }
@@ -941,14 +1380,16 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
             );            // Build notification
             androidx.core.app.NotificationCompat.Builder builder = 
                 new androidx.core.app.NotificationCompat.Builder(requireContext(), channelId)
-                    .setSmallIcon(R.drawable.chat) // Use existing chat icon
+                    .setSmallIcon(android.R.drawable.ic_dialog_email) // Use system icon
                     .setContentTitle(title)
                     .setContentText(content)
                     .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)
                     .setDefaults(androidx.core.app.NotificationCompat.DEFAULT_ALL);
-              
+                  // Use default notification sound since custom sound resource doesn't exist
+            builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+            
             Log.d(TAG, "Building notification with:");
             Log.d(TAG, "- Title: " + title);
             Log.d(TAG, "- Content: " + content);
@@ -1015,14 +1456,13 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                     Log.e(TAG, "❌ Messages notification channel NOT FOUND");
                 }
             }
-            
-            // 4. Check app notification settings
-            if (notificationHelper != null) {
-                boolean appMessagesEnabled = notificationHelper.isNotificationEnabled(NotificationHelper.NOTIF_MESSAGES);
-                Log.d(TAG, "App messages setting enabled: " + appMessagesEnabled);
-            } else {
-                Log.e(TAG, "❌ NotificationHelper is NULL");
-            }
+              // 4. Check app notification settings - DISABLED for now
+            // if (notificationHelper != null) {
+            //     boolean appMessagesEnabled = notificationHelper.isNotificationEnabled(NotificationHelper.NOTIF_MESSAGES);
+            //     Log.d(TAG, "App messages setting enabled: " + appMessagesEnabled);
+            // } else {
+            //     Log.e(TAG, "❌ NotificationHelper is NULL");
+            // }
             
             // 5. Check Do Not Disturb
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -1512,7 +1952,7 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
     private void hideKeyboard() {
         if (getActivity() != null) {
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null && getActivity().getCurrentFocus() != null) {
+            if ( imm != null && getActivity().getCurrentFocus() != null) {
                 imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
             }
         }
@@ -1574,5 +2014,280 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         chatAdapter.notifyDataSetChanged();
         
         Toast.makeText(getContext(), "Không thể nhắn tin với người dùng này", Toast.LENGTH_LONG).show();
+    }
+    
+    // 🔥 Implementation của OnMessageActionListener
+    @Override
+    public void onEditMessage(ChatMessage message, int position) {
+        showEditMessageDialog(message, position);
+    }
+    
+    @Override
+    public void onDeleteMessage(ChatMessage message, int position) {
+        showDeleteMessageConfirmDialog(message, position);
+    }
+    
+    @Override
+    public void onCopyMessage(ChatMessage message) {
+        copyMessageToClipboard(message);
+    }
+    
+    // 🔥 Method để hiện dialog sửa tin nhắn
+    private void showEditMessageDialog(ChatMessage message, int position) {
+        if (message.isImage()) {
+            Toast.makeText(getContext(), "Không thể sửa tin nhắn hình ảnh", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Sửa tin nhắn");
+        
+        final EditText editText = new EditText(requireContext());
+        editText.setText(message.getContent());
+        editText.setSelection(message.getContent().length()); // Cursor ở cuối
+        builder.setView(editText);
+        
+        builder.setPositiveButton("Lưu", (dialog, which) -> {
+            String newContent = editText.getText().toString().trim();
+            if (!newContent.isEmpty()) {
+                updateMessage(message, newContent, position);
+            } else {
+                Toast.makeText(getContext(), "Nội dung tin nhắn không được để trống", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        builder.setNegativeButton("Hủy", null);
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        
+        // Show keyboard
+        editText.requestFocus();
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+        }, 100);
+    }
+    
+    private void showDeleteMessageConfirmDialog(ChatMessage message, int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Xóa tin nhắn");
+        builder.setMessage("Bạn có chắc chắn muốn xóa tin nhắn này?");
+        
+        builder.setPositiveButton("Xóa", (dialog, which) -> {
+            deleteMessage(message, position);
+        });
+        
+        builder.setNegativeButton("Hủy", null);
+        builder.show();
+    }
+    
+    private void copyMessageToClipboard(ChatMessage message) {
+        if (message.isImage()) {
+            Toast.makeText(getContext(), "Không thể sao chép tin nhắn hình ảnh", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        ClipboardManager clipboard = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("Tin nhắn", message.getContent());
+        clipboard.setPrimaryClip(clip);
+        
+        Toast.makeText(getContext(), "Đã sao chép tin nhắn", Toast.LENGTH_SHORT).show();
+    }
+      private void updateMessage(ChatMessage message, String newContent, int position) {
+        if (message.getId() == null) {
+            Toast.makeText(getContext(), "Không thể sửa tin nhắn này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+          // Save original content if this is the first edit
+        final String finalOriginalContent;
+        if (message.getOriginalContent() == null || message.getOriginalContent().isEmpty()) {
+            finalOriginalContent = message.getContent(); // Current content becomes original
+        } else {
+            finalOriginalContent = message.getOriginalContent();
+        }
+        
+        // Call API để update message
+        Map<String, Object> updateRequest = new HashMap<>();
+        updateRequest.put("content", newContent);
+        
+        chatApiService.updateMessage(message.getId(), myId, updateRequest).enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    // Update local message
+                    message.setOriginalContent(finalOriginalContent); // Set original content
+                    message.setContent(newContent);
+                    message.setIsEdited(true);
+                    // Set update time (simplified format)
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                    message.setUpdatedAt(sdf.format(new java.util.Date()));
+                    
+                    chatAdapter.updateMessage(position, message);
+                    
+                    Toast.makeText(getContext(), "Đã cập nhật tin nhắn", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Không thể cập nhật tin nhắn", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void deleteMessage(ChatMessage message, int position) {
+        if (message.getId() == null) {
+            Toast.makeText(getContext(), "Không thể xóa tin nhắn này", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Call API để delete message
+        chatApiService.deleteMessage(message.getId(), myId).enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    // Remove from adapter
+                    chatAdapter.removeMessage(position);
+                    
+                    Toast.makeText(getContext(), "Đã xóa tin nhắn", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Không thể xóa tin nhắn", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        Log.d(TAG, "=== ON ACTIVITY RESULT ===");
+        Log.d(TAG, "Request Code: " + requestCode);
+        Log.d(TAG, "Result Code: " + resultCode);
+        Log.d(TAG, "Data: " + (data != null ? "Available" : "NULL"));
+        Log.d(TAG, "RESULT_OK: " + getActivity().RESULT_OK);
+        
+        if (resultCode == getActivity().RESULT_OK && data != null) {
+            Uri imageUri = null;
+            
+            switch (requestCode) {
+                case REQUEST_SELECT_IMAGE:
+                    Log.d(TAG, "Processing gallery image selection...");
+                    // Image selected from gallery
+                    imageUri = data.getData();
+                    Log.d(TAG, "Gallery image URI: " + imageUri);
+                    break;
+                    
+                case REQUEST_TAKE_PHOTO:
+                    Log.d(TAG, "Processing camera photo...");
+                    // Photo taken with camera
+                    Bundle extras = data.getExtras();
+                    if (extras != null && extras.get("data") != null) {
+                        // For camera, we need to save the bitmap and get URI
+                        // This is a simplified version - in production you'd save to file
+                        Toast.makeText(getContext(), "Tính năng chụp ảnh sẽ được cập nhật sớm", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    break;
+                    
+                default:
+                    Log.d(TAG, "Unknown request code: " + requestCode);
+                    break;
+            }
+            
+            if (imageUri != null) {
+                Log.d(TAG, "✅ Image selected successfully: " + imageUri);
+                Log.d(TAG, "Calling sendImageMessage...");
+                sendImageMessage(imageUri);
+            } else {
+                Log.e(TAG, "❌ Image URI is null");
+                Toast.makeText(getContext(), "Không thể chọn hình ảnh", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.w(TAG, "⚠️ Activity result not OK or data is null");
+            Log.w(TAG, "User may have cancelled or there was an error");
+        }
+    }
+    
+    private void showDebugNotificationMenu() {
+        Log.d(TAG, "=== DEBUG NOTIFICATION MENU ===");
+        
+        String[] options = {
+            "🔔 Test Notification (Normal)",
+            "🔔 Force Chat Notification (Ignore visibility)", 
+            "📱 Simulate Background Message",
+            "🧹 Clear All Notifications",
+            "❌ Cancel"
+        };
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("🔧 Debug Notification Menu");
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0:
+                    // Test notification
+                    if (chatNotificationManager != null) {
+                        chatNotificationManager.showTestNotification("🔔 Normal Test từ " + otherName);
+                        Toast.makeText(getContext(), "✅ Test notification sent", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                    
+                case 1:
+                    // Force chat notification (ignore visibility)
+                    if (chatNotificationManager != null) {
+                        List<ChatMessage> testMessages = new ArrayList<>();
+                        ChatMessage testMsg = new ChatMessage(roomId, otherId, myId, "🔔 FORCE notification test - ignore fragment visibility!", "TEXT");
+                        testMsg.setId(System.currentTimeMillis());
+                        testMsg.setTimestamp(System.currentTimeMillis());
+                        testMessages.add(testMsg);
+                        
+                        Log.d(TAG, "🔔 FORCE showing chat notification (ignore visibility)");
+                        chatNotificationManager.showChatNotification(roomId, otherName, testMessages, myId, otherId);
+                        Toast.makeText(getContext(), "🔔 Force notification sent!", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                    
+                case 2:
+                    // Simulate background message
+                    Toast.makeText(getContext(), "📱 Simulation: Press HOME button and ask someone to send you a message", Toast.LENGTH_LONG).show();
+                    break;
+                    
+                case 3:
+                    // Clear notifications
+                    if (chatNotificationManager != null) {
+                        chatNotificationManager.clearAllChatNotifications();
+                        Toast.makeText(getContext(), "🧹 All notifications cleared", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                    
+                case 4:
+                    // Cancel
+                    dialog.dismiss();
+                    break;
+            }
+        });
+        builder.show();
+    }
+    
+    /**
+     * Helper method to remove failed optimistic image message
+     */
+    private void removeFailedOptimisticMessage() {
+        for (int i = messageList.size() - 1; i >= 0; i--) {
+            ChatMessage msg = messageList.get(i);
+            if (msg.getId() != null && msg.getId() < 0 && 
+                msg.getSenderId().equals(myId) && 
+                msg.getType().equals("IMAGE")) {
+                messageList.remove(i);
+                chatAdapter.notifyItemRemoved(i);
+                break;
+            }
+        }
     }
 }

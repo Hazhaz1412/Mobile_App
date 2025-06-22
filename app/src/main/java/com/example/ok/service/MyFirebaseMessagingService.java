@@ -91,9 +91,59 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String title = remoteMessage.getNotification().getTitle();
         String body = remoteMessage.getNotification().getBody();
         showGeneralNotification(title, body);
+    }    private void showMessageNotification(String title, String body, java.util.Map<String, String> data) {
+        try {
+            // Use ChatNotificationManager for better reliability
+            com.example.ok.util.ChatNotificationManager chatNotificationManager = 
+                new com.example.ok.util.ChatNotificationManager(this);
+            
+            // Extract data from Firebase message
+            String senderIdStr = data.get("senderId");
+            String senderName = data.get("senderName");
+            String roomIdStr = data.get("roomId");
+            
+            // Get current user ID
+            SharedPreferences prefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            long myUserId = prefs.getLong("userId", -1);
+            
+            if (senderIdStr != null && roomIdStr != null && myUserId != -1) {
+                try {
+                    long senderId = Long.parseLong(senderIdStr);
+                    long roomId = Long.parseLong(roomIdStr);
+                    
+                    // Don't show notification for own messages
+                    if (senderId != myUserId) {
+                        chatNotificationManager.showSingleMessageNotification(
+                            roomId, 
+                            senderName != null ? senderName : title, 
+                            body, 
+                            myUserId, 
+                            senderId
+                        );
+                        
+                        Log.d(TAG, "✅ FCM chat notification processed via ChatNotificationManager");
+                        return;
+                    } else {
+                        Log.d(TAG, "Skipping notification for own message");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "Error parsing sender/room IDs from FCM data", e);
+                }
+            }
+            
+            // Fallback to old method if data parsing fails
+            Log.w(TAG, "FCM data incomplete, falling back to basic notification");
+            showBasicMessageNotification(title, body, data);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error in enhanced FCM message notification", e);
+            // Fallback to old method
+            showBasicMessageNotification(title, body, data);
+        }
     }
-
-    private void showMessageNotification(String title, String body, java.util.Map<String, String> data) {
+    
+    private void showBasicMessageNotification(String title, String body, java.util.Map<String, String> data) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         
@@ -104,7 +154,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra("open_chat", true);
             intent.putExtra("other_user_id", Long.parseLong(senderId));
             intent.putExtra("other_user_name", senderName);
-        }        PendingIntent pendingIntent = PendingIntent.getActivity(
+        }PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NotificationChannelManager.CHANNEL_MESSAGES)

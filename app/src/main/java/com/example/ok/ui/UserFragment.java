@@ -36,6 +36,8 @@ import com.example.ok.model.ApiResponse;
 import com.example.ok.model.User;
 import com.example.ok.model.UserProfileRequest;
 import com.example.ok.model.UserProfileResponse;
+import com.example.ok.model.EmailVerificationRequest;
+import com.example.ok.model.VerifyCodeRequest;
 import com.example.ok.util.FileUtil;
 import com.example.ok.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
@@ -54,10 +56,9 @@ import retrofit2.Response;
 public class UserFragment extends Fragment {
     private static final String TAG = "UserFragment";
     private static final String ARG_USER_ID = "userId";
-    private static final String ARG_IS_CURRENT_USER = "isCurrentUser";
-
-    private Long userId;
-    private boolean isCurrentUser;    // UI Components
+    private static final String ARG_IS_CURRENT_USER = "isCurrentUser";    private Long userId;
+    private boolean isCurrentUser;
+    private String currentUserEmail; // 🔐 Store email for verification// UI Components
     private ImageView profileImage;
     private ImageButton btnChangePhoto;
     private TextView tvDisplayName, tvBio, tvEmail, tvPhone, tvRatingCount;
@@ -350,11 +351,12 @@ public class UserFragment extends Fragment {
             }
 
             // Log để debug
-            Log.d(TAG, "User data loaded: " + user.getDisplayName() + ", avatar: " + user.getAvatarUrl());
-
-            // Hiển thị thông tin cơ bản
+            Log.d(TAG, "User data loaded: " + user.getDisplayName() + ", avatar: " + user.getAvatarUrl());            // Hiển thị thông tin cơ bản
             tvDisplayName.setText(user.getDisplayName());
             tvEmail.setText(user.getEmail());
+            
+            // 🔐 Store email for verification purposes
+            currentUserEmail = user.getEmail();
 
             // Hiển thị thông tin bio và contact nếu có
             if (user.getBio() != null && !user.getBio().isEmpty()) {
@@ -585,26 +587,300 @@ public class UserFragment extends Fragment {
                 Log.e(TAG, "Error updating profile", t);
             }
         });
-    }
-
-    private void showDeactivateConfirmation() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Tạm ngưng tài khoản")
-                .setMessage("Bạn có chắc chắn muốn tạm ngưng tài khoản? Bạn có thể kích hoạt lại sau.")
-                .setPositiveButton("Tạm ngưng", (dialog, which) -> deactivateAccount())
+    }    private void showDeactivateConfirmation() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("⚠️ Tạm ngưng tài khoản")
+                .setMessage("Bạn có chắc chắn muốn tạm ngưng tài khoản?\n\n" +
+                           "• Tài khoản sẽ bị vô hiệu hóa tạm thời\n" +
+                           "• Bạn có thể kích hoạt lại sau\n" +
+                           "• Để đảm bảo an toàn, chúng tôi sẽ gửi mã xác thực qua email")
+                .setPositiveButton("Tiếp tục", (dialog, which) -> requestEmailVerification("DEACTIVATE"))
                 .setNegativeButton("Hủy", null)
                 .show();
     }
 
     private void showDeleteConfirmation() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Xóa tài khoản vĩnh viễn")
-                .setMessage("Cảnh báo: Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn. Bạn có chắc chắn muốn tiếp tục?")
-                .setPositiveButton("Xóa vĩnh viễn", (dialog, which) -> deleteAccount())
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("🚨 Xóa tài khoản vĩnh viễn")
+                .setMessage("CẢNH BÁO: Hành động này KHÔNG THỂ HOÀN TÁC!\n\n" +
+                           "Sẽ bị xóa vĩnh viễn:\n" +
+                           "• Tất cả thông tin cá nhân\n" +
+                           "• Lịch sử giao dịch\n" +
+                           "• Tin đăng và hình ảnh\n" +
+                           "• Tin nhắn và đánh giá\n\n" +
+                           "Để đảm bảo an toàn, chúng tôi sẽ gửi mã xác thực qua email")
+                .setPositiveButton("Tôi hiểu, tiếp tục", (dialog, which) -> requestEmailVerification("DELETE"))
+                .setNegativeButton("Hủy", null)
+                .show();    }    // 🔐 NEW: Email verification system for secure account management
+    private void requestEmailVerification(String action) {
+        // Get user email from loaded profile data
+        String userEmail = currentUserEmail;
+        
+        // Fallback: get from TextView if currentUserEmail is null
+        if (userEmail == null || userEmail.isEmpty()) {
+            userEmail = tvEmail.getText().toString().trim();
+        }
+        
+        // Final fallback: try SharedPreferences
+        if (userEmail == null || userEmail.isEmpty()) {
+            SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            userEmail = prefs.getString("email", "");
+        }
+        
+        if (userEmail == null || userEmail.isEmpty()) {
+            Toast.makeText(requireContext(), 
+                "❌ Không tìm thấy email. Vui lòng tải lại trang hoặc đăng nhập lại.", 
+                Toast.LENGTH_LONG).show();
+            return;
+        }        Log.d(TAG, "🔐 Using email for verification: " + maskEmail(userEmail));
+
+        ProgressDialog progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setMessage("Đang gửi mã xác thực...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        EmailVerificationRequest request = new EmailVerificationRequest(userEmail, action);
+        Call<ApiResponse> call = apiService.sendAccountVerificationCode(request);
+        
+        final String finalUserEmail = userEmail; // Make final for inner class
+          call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                progressDialog.dismiss();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        showEmailVerificationDialog(finalUserEmail, action);
+                        Toast.makeText(requireContext(), 
+                                "Mã xác thực đã được gửi đến " + maskEmail(finalUserEmail), 
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireContext(), apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else if (response.code() == 403) {
+                    // 🔧 Handle 403 - Backend endpoint not implemented yet
+                    Log.w(TAG, "❌ Backend endpoint not implemented yet (403). Showing demo mode.");
+                    showBackendNotReadyDialog(finalUserEmail, action);
+                } else if (response.code() == 404) {
+                    // 🔧 Handle 404 - Endpoint not found
+                    Log.w(TAG, "❌ Backend endpoint not found (404). Showing demo mode.");
+                    showBackendNotReadyDialog(finalUserEmail, action);
+                } else {
+                    Toast.makeText(requireContext(), 
+                        "❌ Lỗi server: " + response.code() + ". Vui lòng thử lại sau.", 
+                        Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                progressDialog.dismiss();
+                Log.e(TAG, "❌ Network error sending verification code", t);
+                
+                // Show demo mode for network errors too
+                showBackendNotReadyDialog(finalUserEmail, action);
+            }
+        });    }
+
+    // 🔧 Handle case when backend is not ready yet
+    private void showBackendNotReadyDialog(String email, String action) {
+        String actionText = action.equals("DEACTIVATE") ? "tạm ngưng" : "xóa vĩnh viễn";
+        
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("⚠️ Tính năng đang phát triển")
+                .setMessage("Hệ thống email verification cho việc " + actionText + " tài khoản đang được phát triển.\n\n" +
+                           "📧 Email sẽ được gửi đến: " + maskEmail(email) + "\n\n" +
+                           "Bạn có muốn:\n" +
+                           "• Xem demo UI verification?\n" +
+                           "• Hoặc sử dụng phương thức trực tiếp (không an toàn)?")
+                .setPositiveButton("🎯 Demo UI", (dialog, which) -> {
+                    // Show demo verification dialog
+                    showDemoVerificationDialog(email, action);
+                })
+                .setNeutralButton("⚡ Trực tiếp", (dialog, which) -> {
+                    // Show confirmation for direct action
+                    showDirectActionConfirmation(action);
+                })
                 .setNegativeButton("Hủy", null)
                 .show();
     }
 
+    private void showDemoVerificationDialog(String email, String action) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_email_verification, null);
+        
+        EditText etVerificationCode = dialogView.findViewById(R.id.etVerificationCode);
+        TextView tvMessage = dialogView.findViewById(R.id.tvVerificationMessage);
+        MaterialButton btnVerify = dialogView.findViewById(R.id.btnVerify);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+        MaterialButton btnResendCode = dialogView.findViewById(R.id.btnResendCode);
+
+        String actionText = action.equals("DEACTIVATE") ? "tạm ngưng" : "xóa vĩnh viễn";
+        tvMessage.setText("🎯 DEMO MODE 🎯\n\n" +
+                         "Giả lập gửi mã xác thực đến " + maskEmail(email) + 
+                         " để " + actionText + " tài khoản.\n\n" +
+                         "Nhập bất kỳ mã 6 chữ số nào để test UI:");
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        btnVerify.setOnClickListener(v -> {
+            String code = etVerificationCode.getText().toString().trim();
+            if (code.length() != 6) {
+                Toast.makeText(requireContext(), "Vui lòng nhập đủ 6 chữ số", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            dialog.dismiss();
+            
+            // Demo verification always succeeds
+            String successMessage = action.equals("DEACTIVATE") 
+                ? "🎯 DEMO: Tài khoản sẽ được tạm ngưng (thực tế chưa thực hiện)" 
+                : "🎯 DEMO: Tài khoản sẽ được xóa vĩnh viễn (thực tế chưa thực hiện)";
+                
+            Toast.makeText(requireContext(), successMessage, Toast.LENGTH_LONG).show();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnResendCode.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "🎯 DEMO: Đã gửi lại mã xác thực", Toast.LENGTH_SHORT).show();
+        });
+
+        dialog.show();
+        etVerificationCode.requestFocus();
+    }
+
+    private void showDirectActionConfirmation(String action) {
+        String actionText = action.equals("DEACTIVATE") ? "tạm ngưng" : "xóa vĩnh viễn";
+        String warningText = action.equals("DEACTIVATE") 
+            ? "Tài khoản sẽ bị tạm ngưng ngay lập tức mà KHÔNG CẦN xác thực email."
+            : "Tài khoản sẽ bị xóa vĩnh viễn ngay lập tức mà KHÔNG CẦN xác thực email.\n\n⚠️ NGUY HIỂM: Hành động này không thể hoàn tác!";
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("⚠️ Xác nhận " + actionText + " trực tiếp")
+                .setMessage("CẢNH BÁO: " + warningText + "\n\n" +
+                           "Phương thức này KHÔNG AN TOÀN vì thiếu email verification.\n\n" +
+                           "Bạn có chắc chắn muốn tiếp tục?")
+                .setPositiveButton("Có, tiếp tục", (dialog, which) -> {
+                    if (action.equals("DEACTIVATE")) {
+                        deactivateAccount(); // Use legacy method
+                    } else {
+                        deleteAccount(); // Use legacy method
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void showEmailVerificationDialog(String email, String action) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_email_verification, null);
+        
+        EditText etVerificationCode = dialogView.findViewById(R.id.etVerificationCode);
+        TextView tvMessage = dialogView.findViewById(R.id.tvVerificationMessage);
+        MaterialButton btnVerify = dialogView.findViewById(R.id.btnVerify);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+        MaterialButton btnResendCode = dialogView.findViewById(R.id.btnResendCode);
+
+        String actionText = action.equals("DEACTIVATE") ? "tạm ngưng" : "xóa vĩnh viễn";
+        tvMessage.setText("Chúng tôi đã gửi mã xác thực 6 chữ số đến email " + maskEmail(email) + 
+                         " để xác nhận việc " + actionText + " tài khoản.");
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        btnVerify.setOnClickListener(v -> {
+            String code = etVerificationCode.getText().toString().trim();
+            if (code.length() != 6) {
+                Toast.makeText(requireContext(), "Vui lòng nhập đủ 6 chữ số", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            dialog.dismiss();
+            verifyCodeAndExecuteAction(email, code, action);
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnResendCode.setOnClickListener(v -> {
+            dialog.dismiss();
+            requestEmailVerification(action);
+        });
+
+        dialog.show();
+        
+        // Auto focus on input field
+        etVerificationCode.requestFocus();
+    }
+
+    private void verifyCodeAndExecuteAction(String email, String code, String action) {
+        ProgressDialog progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setMessage("Đang xác thực...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        VerifyCodeRequest request = new VerifyCodeRequest(email, code, action);
+        
+        Call<ApiResponse> call;
+        if (action.equals("DEACTIVATE")) {
+            call = apiService.deactivateAccountWithCode(userId, request);
+        } else {
+            call = apiService.deleteAccountWithCode(userId, request);
+        }
+
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                progressDialog.dismiss();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        String successMessage = action.equals("DEACTIVATE") 
+                            ? "✅ Tài khoản đã được tạm ngưng thành công" 
+                            : "✅ Tài khoản đã được xóa vĩnh viễn";
+                            
+                        Toast.makeText(requireContext(), successMessage, Toast.LENGTH_LONG).show();
+                        logoutUser();
+                    } else {
+                        Toast.makeText(requireContext(), "❌ " + apiResponse.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                } else if (response.code() == 400) {
+                    Toast.makeText(requireContext(), "❌ Mã xác thực không đúng hoặc đã hết hạn", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(requireContext(), "❌ Lỗi: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                progressDialog.dismiss();
+                Toast.makeText(requireContext(), "❌ Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error verifying code and executing action", t);
+            }
+        });
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return email;
+        
+        String[] parts = email.split("@");
+        String localPart = parts[0];
+        String domain = parts[1];
+        
+        if (localPart.length() <= 2) {
+            return email; // Too short to mask
+        }
+        
+        String masked = localPart.substring(0, 2) + "***" + localPart.substring(localPart.length() - 1);
+        return masked + "@" + domain;
+    }
+
+    // Legacy methods (keep for backward compatibility)
     private void deactivateAccount() {
         ProgressDialog progressDialog = new ProgressDialog(requireContext());
         progressDialog.setMessage("Đang xử lý...");

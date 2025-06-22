@@ -53,6 +53,94 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     public void setOnMessageActionListener(OnMessageActionListener listener) {
         this.actionListener = listener;
     }
+    
+    private void showEditHistory(ChatMessage message, int position) {
+        if (message.getOriginalContent() == null || message.getOriginalContent().isEmpty()) {
+            // No original content available
+            android.widget.Toast.makeText(context, "Không có lịch sử chỉnh sửa", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create dialog to show edit history
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
+        builder.setTitle("Lịch sử chỉnh sửa");
+        
+        // Create layout for edit history
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(48, 24, 48, 24);
+        
+        // Original content
+        android.widget.TextView tvOriginalLabel = new android.widget.TextView(context);
+        tvOriginalLabel.setText("Nội dung gốc:");
+        tvOriginalLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvOriginalLabel.setTextSize(14);
+        tvOriginalLabel.setTextColor(context.getResources().getColor(R.color.text_primary));
+        layout.addView(tvOriginalLabel);
+        
+        android.widget.TextView tvOriginal = new android.widget.TextView(context);
+        tvOriginal.setText(message.getOriginalContent());
+        tvOriginal.setTextSize(16);
+        tvOriginal.setPadding(16, 8, 16, 16);
+        tvOriginal.setBackgroundResource(R.drawable.bg_edit_history_original);
+        tvOriginal.setTextColor(context.getResources().getColor(R.color.text_primary));
+        layout.addView(tvOriginal);
+        
+        // Spacer
+        android.view.View spacer = new android.view.View(context);
+        spacer.setLayoutParams(new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 24));
+        layout.addView(spacer);
+        
+        // Current content
+        android.widget.TextView tvCurrentLabel = new android.widget.TextView(context);
+        tvCurrentLabel.setText("Nội dung hiện tại:");
+        tvCurrentLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvCurrentLabel.setTextSize(14);
+        tvCurrentLabel.setTextColor(context.getResources().getColor(R.color.text_primary));
+        layout.addView(tvCurrentLabel);
+        
+        android.widget.TextView tvCurrent = new android.widget.TextView(context);
+        tvCurrent.setText(message.getContent());
+        tvCurrent.setTextSize(16);
+        tvCurrent.setPadding(16, 8, 16, 16);
+        tvCurrent.setBackgroundResource(R.drawable.bg_edit_history_current);
+        tvCurrent.setTextColor(context.getResources().getColor(R.color.text_primary));
+        layout.addView(tvCurrent);
+        
+        // Edit time if available
+        if (message.getUpdatedAt() != null && !message.getUpdatedAt().isEmpty()) {
+            android.widget.TextView tvEditTime = new android.widget.TextView(context);
+            tvEditTime.setText("Đã sửa: " + formatEditTime(message.getUpdatedAt()));
+            tvEditTime.setTextSize(12);
+            tvEditTime.setTextColor(context.getResources().getColor(R.color.text_secondary));
+            tvEditTime.setPadding(0, 16, 0, 0);
+            layout.addView(tvEditTime);
+        }
+        
+        builder.setView(layout);
+        builder.setPositiveButton("Đóng", null);
+        
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    
+    private String formatEditTime(String updatedAt) {
+        try {
+            // Parse the updatedAt string and format it
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            Date date = inputFormat.parse(updatedAt);
+            
+            if (date != null) {
+                java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+                return outputFormat.format(date);
+            }
+        } catch (Exception e) {
+            // Fall back to original string
+            return updatedAt;
+        }
+        return updatedAt;
+    }
 
     @NonNull
     @Override
@@ -62,13 +150,22 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     }    @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         ChatMessage message = messages.get(position);
-        
-        // Set message content
+          // Set message content
         holder.tvContent.setText(message.getContent());
-        
-        // Set message time
+          // Set message time - add "đã sửa" if edited (clickable)
         Date messageDate = message.getDateFromTimestamp();
-        holder.tvTime.setText(timeFormat.format(messageDate));
+        String timeText = timeFormat.format(messageDate);
+        if (message.getIsEdited()) {
+            timeText += " • đã sửa";
+            
+            // Make "đã sửa" clickable to show edit history
+            holder.tvTime.setOnClickListener(v -> showEditHistory(message, position));
+            holder.tvTime.setTextColor(context.getResources().getColor(R.color.primary_color));
+        } else {
+            holder.tvTime.setOnClickListener(null);
+            holder.tvTime.setTextColor(context.getResources().getColor(R.color.text_secondary));
+        }
+        holder.tvTime.setText(timeText);
         
         // Handle message alignment and background
         boolean isMyMessage = message.getSenderId().equals(currentUserId);
@@ -97,11 +194,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
             // Clear listener cho tin nhắn của người khác
             holder.layoutMessage.setOnLongClickListener(null);
         }
-        
-        // Handle image messages
+          // Handle image messages
         if (message.isImage()) {
-            // For image messages, content contains the image URL
-            String imageUrl = message.getContent();
+            // For image messages, use imageUrl field instead of content
+            String imageUrl = message.getImageUrl();
+            android.util.Log.d("ChatAdapter", "🖼️ Loading image - Content: '" + message.getContent() + "', ImageUrl: '" + imageUrl + "'");
             if (imageUrl != null && !imageUrl.isEmpty()) {
                 holder.ivImage.setVisibility(View.VISIBLE);
                 holder.tvContent.setVisibility(View.GONE); // Hide text content for images

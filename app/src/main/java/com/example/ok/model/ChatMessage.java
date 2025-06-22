@@ -40,6 +40,15 @@ public class ChatMessage {
     @SerializedName("isRead")
     private boolean read;
     
+    @SerializedName("isEdited")
+    private boolean isEdited;
+    
+    @SerializedName("originalContent")
+    private String originalContent; // Store original content before edit
+    
+    @SerializedName("updatedAt")
+    private String updatedAt; // When it was last edited
+    
     // Constructor for sending new messages
     public ChatMessage(Long roomId, Long senderId, Long receiverId, String content, String type) {
         this.roomId = roomId;
@@ -149,6 +158,30 @@ public class ChatMessage {
     
     public void setRead(boolean read) {
         this.read = read;
+    }
+    
+    public boolean getIsEdited() {
+        return isEdited;
+    }
+    
+    public void setIsEdited(boolean isEdited) {
+        this.isEdited = isEdited;
+    }
+    
+    public String getOriginalContent() {
+        return originalContent;
+    }
+    
+    public void setOriginalContent(String originalContent) {
+        this.originalContent = originalContent;
+    }
+    
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
     
     // Convenience methods
