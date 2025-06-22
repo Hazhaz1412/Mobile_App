@@ -454,7 +454,50 @@ public interface ApiService {
     
     @GET("api/ratings/can-rate/{transactionId}")
     Call<ApiResponse> canUserRateTransaction(@Path("transactionId") Long transactionId, @Query("userId") Long userId);
-    
-    @GET("api/transactions/completed/for-rating")
+      @GET("api/transactions/completed/for-rating")
     Call<ApiResponse> getCompletedTransactionsForRating(@Query("userId") Long userId, @Query("page") int page, @Query("size") int size);
+
+    // === FAVORITES ENDPOINTS ===
+    
+    /**
+     * Add a listing to user's favorites
+     */
+    @POST("api/favorites")
+    Call<ApiResponse> addFavorite(
+        @Query("userId") Long userId,
+        @Query("listingId") Long listingId
+    );
+    
+    /**
+     * Remove a listing from user's favorites
+     */
+    @DELETE("api/favorites")
+    Call<ApiResponse> removeFavorite(
+        @Query("userId") Long userId,
+        @Query("listingId") Long listingId
+    );
+    
+    /**
+     * Check if a listing is favorited by user
+     */
+    @GET("api/favorites/check")
+    Call<ApiResponse> isFavorite(
+        @Query("userId") Long userId,
+        @Query("listingId") Long listingId
+    );
+      /**
+     * Get all user's favorite listings
+     */
+    @GET("api/favorites/user/{userId}")
+    Call<PagedApiResponse> getUserFavorites(
+        @Path("userId") Long userId,
+        @Query("page") int page,
+        @Query("size") int size
+    );
+    
+    /**
+     * Get all user's favorite listings (simple version)
+     */
+    @GET("api/favorites/user/{userId}")
+    Call<ApiResponse> getFavoriteListings(@Path("userId") Long userId);
 }

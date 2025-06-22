@@ -11,12 +11,8 @@ import androidx.appcompat.widget.AppCompatButton;
 import com.example.ok.ui.*;
 import com.example.ok.util.NotificationChannelManager;
 
-public class MainMenu extends AppCompatActivity {
-
-    private AppCompatButton btnDashboard, btnCart, btnChat, btnUser;
-    private AppCompatButton currentSelectedButton;
-
-    @Override
+public class MainMenu extends AppCompatActivity {    private AppCompatButton btnDashboard, btnCart, btnChat, btnUser;
+    private AppCompatButton currentSelectedButton;@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);        // Create notification channels when MainMenu starts - critical for notifications
@@ -34,10 +30,7 @@ public class MainMenu extends AppCompatActivity {
                 setSelectedButton(btnDashboard);
             }
         }
-    }
-
-    private void initViews() {
-        // Đảm bảo các ID đúng với layout
+    }    private void initViews() {
         btnDashboard = findViewById(R.id.btnDashboard);
         btnCart = findViewById(R.id.btnCart);
         btnChat = findViewById(R.id.btnChat);
@@ -48,14 +41,25 @@ public class MainMenu extends AppCompatActivity {
         Log.d("MainMenu", "btnCart: " + (btnCart != null));
         Log.d("MainMenu", "btnChat: " + (btnChat != null));
         Log.d("MainMenu", "btnUser: " + (btnUser != null));
-    }
-
-    private void setupClickListeners() {
+    }private void setupClickListeners() {
+        // Trang chủ button
         if (btnDashboard != null) {
             btnDashboard.setOnClickListener(v -> {
-                loadFragment(new HomeFragment());
-                setSelectedButton(btnDashboard);
+                Log.d("MainMenu", "🔥 Trang chủ clicked!");
+                try {
+                    HomeFragment homeFragment = new HomeFragment();
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, homeFragment)
+                            .commit();
+                    setSelectedButton(btnDashboard);
+                    Log.d("MainMenu", "✅ Home fragment loaded");
+                } catch (Exception e) {
+                    Log.e("MainMenu", "❌ Error loading home fragment", e);
+                }
             });
+        } else {
+            Log.e("MainMenu", "❌ btnDashboard is NULL!");
         }
 
         // Sửa tên button từ btnCart thành btnMyListings
@@ -72,11 +76,8 @@ public class MainMenu extends AppCompatActivity {
                     setSelectedButton(btnCart);
                 }
             });
-        }
-
-        // Thêm kiểm tra null cho btnChat
-        if (btnChat != null) {
-            btnChat.setOnClickListener(v -> {
+        }        // Thêm kiểm tra null cho btnChat
+        if (btnChat != null) {            btnChat.setOnClickListener(v -> {
                 // Open chat inbox
                 loadFragment(new ChatInboxFragment());
                 setSelectedButton(btnChat);
@@ -98,29 +99,31 @@ public class MainMenu extends AppCompatActivity {
                 }
             });
         }
-    }
-
-    private void setSelectedButton(AppCompatButton selectedButton) {
+    }    private void setSelectedButton(AppCompatButton selectedButton) {
         // Reset all buttons
         resetButtonSelection();
 
         // Set selected button
-        currentSelectedButton = selectedButton;
-        selectedButton.setBackgroundResource(R.drawable.customselectedbutton);
-    }
-
-    private void resetButtonSelection() {
-        btnDashboard.setBackgroundResource(R.drawable.customwhitebutton);
-        btnCart.setBackgroundResource(R.drawable.customwhitebutton);
-        btnChat.setBackgroundResource(R.drawable.customwhitebutton);
-        btnUser.setBackgroundResource(R.drawable.customwhitebutton);
-    }
-
-    public void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        if (selectedButton != null) {
+            currentSelectedButton = selectedButton;
+            selectedButton.setBackgroundResource(R.drawable.customselectedbutton);
+        }
+    }    private void resetButtonSelection() {
+        if (btnDashboard != null) btnDashboard.setBackgroundResource(R.drawable.customwhitebutton);
+        if (btnCart != null) btnCart.setBackgroundResource(R.drawable.customwhitebutton);
+        if (btnChat != null) btnChat.setBackgroundResource(R.drawable.customwhitebutton);
+        if (btnUser != null) btnUser.setBackgroundResource(R.drawable.customwhitebutton);
+    }public void loadFragment(Fragment fragment) {
+        Log.d("MainMenu", "🔄 Loading fragment: " + fragment.getClass().getSimpleName());
+        try {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .commitAllowingStateLoss(); // Thay đổi này để tránh IllegalStateException
+            Log.d("MainMenu", "✅ Fragment loaded successfully");
+        } catch (Exception e) {
+            Log.e("MainMenu", "❌ Error loading fragment", e);
+        }
     }
 
     public void replaceFragment(Fragment fragment) {
@@ -315,6 +318,26 @@ public class MainMenu extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("MainMenu", "Error navigating to my offers", e);
             Toast.makeText(this, "Không thể mở yêu cầu của tôi", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Navigate to favorites from user profile
+     */
+    public void navigateToFavorites() {
+        try {
+            FavoritesFragment fragment = new FavoritesFragment();
+            
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack("Favorites")
+                    .commit();
+                    
+            Log.d("MainMenu", "Navigated to favorites");
+        } catch (Exception e) {
+            Log.e("MainMenu", "Error navigating to favorites", e);
+            Toast.makeText(this, "Không thể mở danh sách yêu thích", Toast.LENGTH_SHORT).show();
         }
     }
 }

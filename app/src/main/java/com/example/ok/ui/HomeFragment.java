@@ -69,11 +69,11 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_home, container, false);
-    }
-
-    @Override
+    }    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        Log.d("HomeFragment", "🏠 HomeFragment onViewCreated called");
 
         // Initialize views
         initViews(view);
@@ -92,9 +92,9 @@ public class HomeFragment extends Fragment {
 
         // Load data
         loadData();
-    }
-
-    private void initViews(View view) {
+    }    private void initViews(View view) {
+        Log.d("HomeFragment", "🔍 Initializing views...");
+        
         // User avatar
         ivUserAvatar = view.findViewById(R.id.ivUserAvatar);
 
@@ -110,7 +110,11 @@ public class HomeFragment extends Fragment {
 
         // Categories grid - tìm LinearLayout chứa categories
         categoriesGrid = findCategoriesGrid(view);
-    }    private LinearLayout findCategoriesGrid(View view) {
+        
+        Log.d("HomeFragment", "✅ Views initialized - searchBar: " + (searchBar != null) + 
+               ", featuredRV: " + (featuredItemsRecyclerView != null) + 
+               ", fabAddItem: " + (fabAddItem != null));
+    }private LinearLayout findCategoriesGrid(View view) {
         // Tìm LinearLayout chứa 7 categories trong 2 hàng
         // Categories grid là LinearLayout có orientation="vertical" chứa 2 hàng
         return findLinearLayoutWithCategories(view);

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipeRefresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/layoutHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/white"
+            android:elevation="4dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💝 Danh sách yêu thích"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_gravity="center_horizontal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Những sản phẩm bạn đã thêm vào yêu thích"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+        <!-- Loading Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="100dp"
+            android:visibility="gone" />        <!-- Empty State -->
+        <LinearLayout
+            android:id="@+id/layoutEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginHorizontal="32dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="💝 Chưa có sản phẩm yêu thích nào\n\nHãy thêm sản phẩm vào danh sách yêu thích để xem ở đây!"
+                android:textSize="16sp"
+                android:textColor="#888888"
+                android:lineSpacingExtra="8dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnRetryFavorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/customwhitebutton"
+                android:text="🔄 Thử lại"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="12dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Favorites RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerFavorites"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/layoutHeader"
+            android:layout_marginTop="8dp"
+            android:padding="8dp"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />        <!-- FAB để thêm sản phẩm mới (optional) -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/fabAddListing"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="16dp"
+            android:background="@drawable/customwhitebutton"
+            android:drawableTop="@drawable/ic_add"
+            android:text=""
+            android:elevation="6dp" />
+
+    </RelativeLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -257,14 +257,13 @@ public class ChatInboxFragment extends Fragment implements ChatInboxAdapter.OnCh
     private void startChatRoomPolling() {
         updateRunnable = new Runnable() {
             @Override
-            public void run() {
-                if (isAdded() && currentUserId != -1) {
-                    // Poll for chat room updates
-                    chatApiService.getUserChatRooms(currentUserId).enqueue(new Callback<ApiResponse>() {
+            public void run() {                if (isAdded() && currentUserId != -1) {
+                    // Poll for chat room updates - Use same API as loadChatRooms()
+                    chatApiService.getUserChatRoomsDirect(currentUserId).enqueue(new Callback<List<ChatRoom>>() {
                         @Override
-                        public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                                List<ChatRoom> updatedRooms = response.body().getDataListAs(ChatRoom.class);
+                        public void onResponse(@NonNull Call<List<ChatRoom>> call, @NonNull Response<List<ChatRoom>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                List<ChatRoom> updatedRooms = response.body();
                                 
                                 if (!updatedRooms.isEmpty()) {
                                     chatRoomList = updatedRooms;
@@ -273,14 +272,15 @@ public class ChatInboxFragment extends Fragment implements ChatInboxAdapter.OnCh
                                     if (layoutEmpty.getVisibility() == View.VISIBLE && !chatRoomList.isEmpty()) {
                                         showChatRooms();
                                     }
-                                }                            }
+                                }
+                            }
                             
                             // Schedule next poll
                             updateHandler.postDelayed(updateRunnable, POLLING_INTERVAL);
                         }
                         
                         @Override
-                        public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                        public void onFailure(@NonNull Call<List<ChatRoom>> call, @NonNull Throwable t) {
                             Log.e(TAG, "Error polling for chat room updates", t);
                             
                             // Schedule next poll even if this one failed

@@ -39,9 +39,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Image Gallery -->
+            android:orientation="vertical">            <!-- Image Gallery -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
@@ -78,6 +76,19 @@
                     android:src="@drawable/arrow_back"
                     app:tint="@color/white"
                     android:contentDescription="Quay lại" />
+
+                <!-- Favorite Button Overlay -->
+                <Button
+                    android:id="@+id/btnFavorite"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="16dp"
+                    android:text="🤍"
+                    android:textSize="20sp"
+                    android:background="@drawable/bg_image_counter"
+                    android:textColor="@color/white"
+                    style="@style/Widget.Material3.Button.UnelevatedButton" />
 
             </FrameLayout>
 
@@ -350,9 +361,7 @@
 
         </LinearLayout>
 
-    </ScrollView>
-
-    <!-- Action Buttons (Fixed at bottom) -->
+    </ScrollView>    <!-- Action Buttons (Fixed at bottom) -->
     <LinearLayout
         android:id="@+id/layoutActions"
         android:layout_width="match_parent"
@@ -363,67 +372,69 @@
         android:elevation="8dp"
         android:layout_gravity="bottom">
 
+        <!-- Contact Button -->
         <Button
             android:id="@+id/btnContact"
             android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
+            android:layout_height="52dp"
+            android:layout_weight="1.5"
             android:layout_marginEnd="8dp"
             android:text="Liên hệ"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:drawableStart="@drawable/chat"
-            android:drawablePadding="8dp"
+            android:drawablePadding="6dp"
             android:backgroundTint="@color/primary_color"
-            android:textColor="@color/white" />        <Button
+            android:textColor="@color/white"
+            style="@style/Widget.Material3.Button" />
+
+        <!-- Buy Now Button -->
+        <Button
             android:id="@+id/btnBuy"
             android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
+            android:layout_height="52dp"
+            android:layout_weight="1.5"
             android:layout_marginEnd="8dp"
             android:text="Mua ngay"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textColor="@color/white"
             android:backgroundTint="@color/primary_color"
             android:drawableStart="@android:drawable/ic_menu_send"
-            android:drawablePadding="8dp" />
+            android:drawablePadding="6dp"
+            style="@style/Widget.Material3.Button" />
 
+        <!-- Make Offer Button -->
         <Button
             android:id="@+id/btnMakeOffer"
             android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"            android:text="Yêu cầu giảm giá"
-            android:textSize="14sp"
-            android:textColor="@color/primary_color"            android:backgroundTint="@color/white"
+            android:layout_height="52dp"
+            android:layout_weight="1.5"
+            android:layout_marginEnd="8dp"
+            android:text="Giảm giá"
+            android:textSize="13sp"
+            android:textColor="@color/primary_color"
+            android:backgroundTint="@color/white"
             android:strokeColor="@color/primary_color"
             app:strokeWidth="2dp"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:drawableStart="@android:drawable/ic_menu_edit"
-            android:drawablePadding="8dp"
+            android:drawablePadding="4dp"
             android:visibility="gone" />
 
-        <Button
-            android:id="@+id/btnFavorite"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="8dp"
-            android:text="🤍"
-            android:textSize="20sp"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
-
+        <!-- Share Button -->
         <Button
             android:id="@+id/btnShare"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:layout_marginEnd="8dp"
             android:text="📤"
             android:textSize="18sp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
+        <!-- Report Button -->
         <Button
             android:id="@+id/btnReport"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:text="⚠️"
             android:textSize="18sp"
             style="@style/Widget.Material3.Button.OutlinedButton" />

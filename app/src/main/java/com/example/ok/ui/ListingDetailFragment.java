@@ -55,10 +55,10 @@ public class ListingDetailFragment extends Fragment {
     private TextView tvCategory, tvCondition, tvStatus;
     private FlexboxLayout flexboxTags;
     private CircleImageView ivSellerAvatar;
-    private TextView tvSellerName, tvSellerJoinDate;
-    private RatingBar rbSellerRating;
-    private Button btnContact, btnFavorite, btnShare, btnReport, btnBuy;
+    private TextView tvSellerName, tvSellerJoinDate;    private RatingBar rbSellerRating;
+    private Button btnContact, btnShare, btnReport, btnBuy;
     private Button btnMakeOffer; // Add offer button
+    private Button btnFavorite; // Favorite button overlay
     private FloatingActionButton fabEdit;
     private LinearLayout layoutSellerInfo, layoutActions, layoutLoading;
     private ScrollView scrollViewContent;
@@ -154,11 +154,9 @@ public class ListingDetailFragment extends Fragment {
         ivSellerAvatar = view.findViewById(R.id.ivSellerAvatar);
         tvSellerName = view.findViewById(R.id.tvSellerName);
         tvSellerJoinDate = view.findViewById(R.id.tvSellerJoinDate);
-        rbSellerRating = view.findViewById(R.id.rbSellerRating);
-
-        layoutActions = view.findViewById(R.id.layoutActions);
+        rbSellerRating = view.findViewById(R.id.rbSellerRating);        layoutActions = view.findViewById(R.id.layoutActions);
         btnContact = view.findViewById(R.id.btnContact);
-        btnFavorite = view.findViewById(R.id.btnFavorite);
+        btnFavorite = view.findViewById(R.id.btnFavorite); // Overlay favorite
         btnShare = view.findViewById(R.id.btnShare);
         btnReport = view.findViewById(R.id.btnReport);
         btnBuy = view.findViewById(R.id.btnBuy);
@@ -180,9 +178,7 @@ public class ListingDetailFragment extends Fragment {
         btnShare.setOnClickListener(v -> shareListing());
 
         // Report listing
-        btnReport.setOnClickListener(v -> reportListing());
-
-        // Edit listing (if owner)
+        btnReport.setOnClickListener(v -> reportListing());        // Edit listing (if owner)
         fabEdit.setOnClickListener(v -> editListing());
 
         // View seller profile
@@ -197,6 +193,32 @@ public class ListingDetailFragment extends Fragment {
         
         // Make offer
         btnMakeOffer.setOnClickListener(v -> showMakeOfferDialog());
+        
+        // **DEBUG: Add long click on title to check favorite status**
+        tvTitle.setOnLongClickListener(v -> {
+            SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+            long currentUserId = prefs.getLong("userId", -1);
+            boolean localFav = getFavoriteFromLocal(currentUserId);
+            
+            String debugInfo = "🔍 FAVORITE DEBUG:\n" +
+                    "• Current state: " + (isFavorited ? "❤️ Favorited" : "🤍 Not favorited") + "\n" +
+                    "• Local storage: " + (localFav ? "❤️ True" : "🤍 False") + "\n" +
+                    "• User ID: " + currentUserId + "\n" +
+                    "• Listing ID: " + listing.getId() + "\n" +
+                    "• Button visible: " + (btnFavorite.getVisibility() == View.VISIBLE ? "✅ Yes" : "❌ No");
+            
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Favorite Debug Info")
+                    .setMessage(debugInfo)
+                    .setPositiveButton("Force Toggle", (dialog, which) -> {
+                        toggleFavorite();
+                    })
+                    .setNegativeButton("OK", null)
+                    .show();
+            
+            Log.d(TAG, debugInfo);
+            return true;
+        });
     }
 
     private void loadListingDetail(long listingId) {
@@ -218,9 +240,15 @@ public class ListingDetailFragment extends Fragment {
                         try {
                             parseListing(apiResponse.getData());
                             displayListingInfo();
-                            loadSellerInfo();
-                            checkOwnership();
-                            setupImageGallery();
+                            loadSellerInfo();                            checkOwnership();                            setupImageGallery();
+                            loadFavoriteStatus(); // Load favorite status
+                            
+                            // **FORCE: Make sure favorite button is visible and working**
+                            btnFavorite.setVisibility(View.VISIBLE);
+                            btnFavorite.setAlpha(1.0f);
+                            btnFavorite.setClickable(true);
+                            btnFavorite.setEnabled(true);
+                            Log.d(TAG, "🔍 Favorite button forced visible: " + btnFavorite.getVisibility());
 
                         } catch (Exception e) {
                             Log.e(TAG, "Error parsing listing data", e);
@@ -480,10 +508,10 @@ public class ListingDetailFragment extends Fragment {
                 tvSellerJoinDate.setText("");
                 ivSellerAvatar.setImageResource(R.drawable.user);
             }
-        }
+        }        rbSellerRating.setRating(4.5f);
+    }
 
-        rbSellerRating.setRating(4.5f);
-    }    private void checkOwnership() {
+    private void checkOwnership() {
         SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
         long currentUserId = prefs.getLong("userId", -1);
 
@@ -577,23 +605,190 @@ public class ListingDetailFragment extends Fragment {
 
                 .setNegativeButton("Hủy", null)
                 .show();
+    }    private void toggleFavorite() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        long currentUserId = prefs.getLong("userId", -1);
+        
+        if (currentUserId == -1) {
+            Toast.makeText(requireContext(), "Vui lòng đăng nhập để thêm yêu thích", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Disable button temporarily
+        btnFavorite.setEnabled(false);
+        
+        if (isFavorited) {
+            // Remove from favorites
+            removeFavorite(currentUserId);
+        } else {
+            // Add to favorites
+            addFavorite(currentUserId);
+        }
     }
-
-    private void toggleFavorite() {
-        isFavorited = !isFavorited;
+      private void addFavorite(long userId) {
+        Call<ApiResponse> call = apiService.addFavorite(userId, listing.getId());
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                btnFavorite.setEnabled(true);
+                
+                // Check for 403/404 - backend not implemented yet
+                if (response.code() == 403 || response.code() == 404) {
+                    Log.w(TAG, "Favorites API not implemented yet (HTTP " + response.code() + "), using local storage");
+                    addFavoriteLocally(userId);
+                    return;
+                }
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        isFavorited = true;
+                        updateFavoriteButton();
+                        saveFavoriteLocally(userId, true); // Also save locally
+                        Toast.makeText(requireContext(), "✅ Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể thêm yêu thích", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.w(TAG, "Server error, falling back to local storage");
+                    addFavoriteLocally(userId);
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                btnFavorite.setEnabled(true);
+                Log.e(TAG, "Network error, using local storage", t);
+                addFavoriteLocally(userId);
+            }
+        });
+    }
+    
+    private void addFavoriteLocally(long userId) {
+        isFavorited = true;
         updateFavoriteButton();
-
-        String message = isFavorited ? "Đã thêm vào yêu thích" : "Đã xóa khỏi yêu thích";
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        saveFavoriteLocally(userId, true);
+        Toast.makeText(requireContext(), "✅ Đã thêm vào yêu thích (lưu local)", Toast.LENGTH_SHORT).show();
     }
-
-    private void updateFavoriteButton() {
+      private void removeFavorite(long userId) {
+        Call<ApiResponse> call = apiService.removeFavorite(userId, listing.getId());
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                btnFavorite.setEnabled(true);
+                
+                // Check for 403/404 - backend not implemented yet
+                if (response.code() == 403 || response.code() == 404) {
+                    Log.w(TAG, "Favorites API not implemented yet (HTTP " + response.code() + "), using local storage");
+                    removeFavoriteLocally(userId);
+                    return;
+                }
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        isFavorited = false;
+                        updateFavoriteButton();
+                        saveFavoriteLocally(userId, false); // Also save locally
+                        Toast.makeText(requireContext(), "❌ Đã xóa khỏi yêu thích", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể xóa yêu thích", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.w(TAG, "Server error, falling back to local storage");
+                    removeFavoriteLocally(userId);
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                btnFavorite.setEnabled(true);
+                Log.e(TAG, "Network error, using local storage", t);
+                removeFavoriteLocally(userId);
+            }
+        });
+    }
+    
+    private void removeFavoriteLocally(long userId) {
+        isFavorited = false;
+        updateFavoriteButton();
+        saveFavoriteLocally(userId, false);
+        Toast.makeText(requireContext(), "❌ Đã xóa khỏi yêu thích (lưu local)", Toast.LENGTH_SHORT).show();
+    }
+      private void loadFavoriteStatus() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        long currentUserId = prefs.getLong("userId", -1);
+        
+        if (currentUserId == -1) {
+            // User not logged in, default to not favorited
+            isFavorited = false;
+            updateFavoriteButton();
+            return;
+        }
+        
+        // First load from local storage (immediate)
+        isFavorited = getFavoriteFromLocal(currentUserId);
+        updateFavoriteButton();
+        
+        // Then try to sync with server
+        Call<ApiResponse> call = apiService.isFavorite(currentUserId, listing.getId());
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+                // Ignore 403/404 - backend not implemented yet
+                if (response.code() == 403 || response.code() == 404) {
+                    Log.w(TAG, "Favorites API not implemented yet (HTTP " + response.code() + "), using local storage only");
+                    return;
+                }
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse apiResponse = response.body();
+                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
+                        try {
+                            // Parse the boolean result and update if different
+                            boolean serverFavorite = (Boolean) apiResponse.getData();
+                            if (serverFavorite != isFavorited) {
+                                isFavorited = serverFavorite;
+                                updateFavoriteButton();
+                                saveFavoriteLocally(currentUserId, isFavorited);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing favorite status", e);
+                        }
+                    }
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                Log.d(TAG, "Could not sync favorite status with server, using local storage");
+            }
+        });
+    }
+    
+    private void saveFavoriteLocally(long userId, boolean isFavorite) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("Favorites", MODE_PRIVATE);
+        String key = "favorite_" + userId + "_" + listing.getId();
+        prefs.edit().putBoolean(key, isFavorite).apply();
+    }
+    
+    private boolean getFavoriteFromLocal(long userId) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("Favorites", MODE_PRIVATE);
+        String key = "favorite_" + userId + "_" + listing.getId();
+        return prefs.getBoolean(key, false);
+    }private void updateFavoriteButton() {
         if (isFavorited) {
             btnFavorite.setText("❤️");
-            btnFavorite.setBackgroundTintList(requireContext().getColorStateList(R.color.status_sold));
+            btnFavorite.setBackgroundTintList(requireContext().getColorStateList(R.color.white));
+            btnFavorite.setAlpha(0.9f);
         } else {
             btnFavorite.setText("🤍");
-            btnFavorite.setBackgroundTintList(requireContext().getColorStateList(R.color.text_secondary));
+            btnFavorite.setBackgroundTintList(requireContext().getColorStateList(R.color.white));
+            btnFavorite.setAlpha(0.8f);
         }
     }
 

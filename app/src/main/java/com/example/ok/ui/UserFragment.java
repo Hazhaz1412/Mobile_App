@@ -63,7 +63,7 @@ public class UserFragment extends Fragment {
     private ImageButton btnChangePhoto;
     private TextView tvDisplayName, tvBio, tvEmail, tvPhone, tvRatingCount;
     private RatingBar ratingBar;
-    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout, btnNotificationSettings, btnPaymentHistory, btnOfferManagement, btnMyOffers;
+    private MaterialButton btnEditProfile, btnDeactivateAccount, btnDeleteAccount, btnLogout, btnNotificationSettings, btnPaymentHistory, btnFavorites, btnOfferManagement, btnMyOffers;
     private View accountActionsCard;
 
     // API Service
@@ -136,22 +136,22 @@ public class UserFragment extends Fragment {
         tvRatingCount = view.findViewById(R.id.tvRatingCount);
         ratingBar = view.findViewById(R.id.ratingBar);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
-        btnDeactivateAccount = view.findViewById(R.id.btnDeactivateAccount);
-        btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);        btnLogout = view.findViewById(R.id.btnLogout);
+        btnDeactivateAccount = view.findViewById(R.id.btnDeactivateAccount);        btnDeleteAccount = view.findViewById(R.id.btnDeleteAccount);        btnLogout = view.findViewById(R.id.btnLogout);
         btnNotificationSettings = view.findViewById(R.id.btnNotificationSettings);
         btnPaymentHistory = view.findViewById(R.id.btnPaymentHistory);
+        btnFavorites = view.findViewById(R.id.btnFavorites);
         btnOfferManagement = view.findViewById(R.id.btnOfferManagement);
         btnMyOffers = view.findViewById(R.id.btnMyOffers);
         accountActionsCard = view.findViewById(R.id.accountActionsCard);
 
         // Update UI based on whether viewing own profile or other user's profile
         updateUIForViewMode();
-    }    private void updateUIForViewMode() {
-        if (isCurrentUser) {
+    }    private void updateUIForViewMode() {        if (isCurrentUser) {
             // Viewing own profile
             btnChangePhoto.setVisibility(View.VISIBLE);
             btnEditProfile.setVisibility(View.VISIBLE);
             btnPaymentHistory.setVisibility(View.VISIBLE);
+            btnFavorites.setVisibility(View.VISIBLE);
             accountActionsCard.setVisibility(View.VISIBLE);
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.VISIBLE);
@@ -164,6 +164,7 @@ public class UserFragment extends Fragment {
             btnChangePhoto.setVisibility(View.GONE);
             btnEditProfile.setVisibility(View.GONE);
             btnPaymentHistory.setVisibility(View.GONE);
+            btnFavorites.setVisibility(View.GONE);
             accountActionsCard.setVisibility(View.GONE);
             if (btnLogout != null) {
                 btnLogout.setVisibility(View.GONE);
@@ -197,10 +198,14 @@ public class UserFragment extends Fragment {
           // Notification settings button
         if (btnNotificationSettings != null) {
             btnNotificationSettings.setOnClickListener(v -> navigateToNotificationSettings());
-        }
-          // Payment history button
+        }          // Payment history button
         if (btnPaymentHistory != null) {
             btnPaymentHistory.setOnClickListener(v -> navigateToPaymentHistory());
+        }
+        
+        // Favorites button
+        if (btnFavorites != null) {
+            btnFavorites.setOnClickListener(v -> navigateToFavorites());
         }
           // Offer management button
         if (btnOfferManagement != null) {
@@ -215,10 +220,15 @@ public class UserFragment extends Fragment {
         if (getActivity() instanceof MainMenu) {
             ((MainMenu) getActivity()).navigateToNotificationSettings();
         }
-    }
-      private void navigateToPaymentHistory() {
+    }      private void navigateToPaymentHistory() {
         if (getActivity() instanceof MainMenu) {
             ((MainMenu) getActivity()).navigateToPaymentHistory();
+        }
+    }
+    
+    private void navigateToFavorites() {
+        if (getActivity() instanceof MainMenu) {
+            ((MainMenu) getActivity()).navigateToFavorites();
         }
     }
       private void navigateToOfferManagement() {

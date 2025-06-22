@@ -105,9 +105,7 @@ public class NotificationHelper {
     private void saveTokenToPreferences(String token) {
         SharedPreferences userPrefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         userPrefs.edit().putString("fcm_token", token).apply();
-    }
-
-    // Send FCM token to server
+    }    // Send FCM token to server
     private void sendTokenToServer(String token) {
         SharedPreferences userPrefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         Long userId = userPrefs.getLong("userId", -1);
@@ -120,25 +118,23 @@ public class NotificationHelper {
         RetrofitClient.init(context);
         ApiService apiService = RetrofitClient.getApiService();
         
-        // TODO: Add this method to ApiService
-        // Call<ApiResponse> call = apiService.updateFcmToken(userId, token);
-        // call.enqueue(new Callback<ApiResponse>() {
-        //     @Override
-        //     public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
-        //         if (response.isSuccessful()) {
-        //             Log.d(TAG, "FCM token sent to server successfully");
-        //         } else {
-        //             Log.e(TAG, "Failed to send FCM token to server");
-        //         }
-        //     }
-        //
-        //     @Override
-        //     public void onFailure(Call<ApiResponse> call, Throwable t) {
-        //         Log.e(TAG, "Error sending FCM token to server", t);
-        //     }
-        // });
-        
-        Log.d(TAG, "TODO: Implement updateFcmToken API endpoint");
+        // Send FCM token to server using existing API
+        Call<ApiResponse> call = apiService.updateFcmToken(userId, token);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Log.d(TAG, "FCM token sent to server successfully");
+                } else {
+                    Log.e(TAG, "Failed to send FCM token to server: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+                Log.e(TAG, "Error sending FCM token to server", t);
+            }
+        });
     }
 
     // Get notification settings summary

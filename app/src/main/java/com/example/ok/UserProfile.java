@@ -27,9 +27,7 @@ public class UserProfile extends AppCompatActivity {
         });
         
         initViews();
-    }
-    
-    private void initViews() {
+    }    private void initViews() {
         LinearLayout layoutBlockedUsers = findViewById(R.id.layoutBlockedUsers);
         layoutBlockedUsers.setOnClickListener(new View.OnClickListener() {
             @Override

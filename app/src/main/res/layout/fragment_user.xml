@@ -245,7 +245,19 @@
                         android:textColor="@color/colorPrimary"
                         app:icon="@drawable/ic_payment"
                         app:iconTint="@color/colorPrimary"
-                        app:strokeColor="@color/colorPrimary" />                    <com.google.android.material.button.MaterialButton
+                        app:strokeColor="@color/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFavorites"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="❤️ Danh sách yêu thích"
+                        android:textColor="@color/error_color"
+                        app:icon="@drawable/ic_favorite"
+                        app:iconTint="@color/error_color"
+                        app:strokeColor="@color/error_color" /><com.google.android.material.button.MaterialButton
                         android:id="@+id/btnOfferManagement"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"

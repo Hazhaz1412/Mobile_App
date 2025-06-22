@@ -18,9 +18,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31"><activity
             android:name=".UserProfile"
+            android:exported="false" />        <activity
+            android:name=".ui.BlockedUsersActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.BlockedUsersActivity"
+            android:name=".ui.FavoritesActivity"
             android:exported="false" />
         <activity
             android:name=".ResetPassword"
@@ -61,9 +63,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Firebase Messaging Service -->
+        </activity>        <!-- Firebase Messaging Service -->
         <service
             android:name=".service.MyFirebaseMessagingService"
             android:exported="false">
@@ -71,6 +71,12 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Chat Polling Service - for background message polling -->
+        <service
+            android:name=".service.ChatPollingService"
+            android:exported="false"
+            android:enabled="true" />
 
     </application>
 
