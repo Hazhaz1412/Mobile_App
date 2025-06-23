@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lọc theo địa điểm"
+        android:text="@string/l_c_theo_a_i_m"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -23,7 +23,7 @@
             android:id="@+id/etLocationSearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nhập tên thành phố, quận, huyện..."
+            android:hint="@string/nh_p_t_n_th_nh_ph_qu_n_huy_n"
             android:inputType="text"
             android:maxLines="1" />
 
@@ -32,7 +32,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Địa điểm phổ biến"
+        android:text="@string/a_i_m_ph_bi_n"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -54,7 +54,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Đặt lại"
+            android:text="@string/t_l_i"
             android:layout_marginEnd="8dp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
@@ -63,7 +63,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Áp dụng"
+            android:text="@string/p_d_ng"
             android:layout_marginStart="8dp"
             android:backgroundTint="@color/primary_color"
             android:textColor="@color/white" />

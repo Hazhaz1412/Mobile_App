@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
-            android:text="Tên sản phẩm"
+            android:text="@string/t_n_s_n_ph_m"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextPrimary" />
@@ -48,7 +48,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Số tiền:"
+                android:text="@string/s_ti_n"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary" />
 
@@ -56,7 +56,7 @@
                 android:id="@+id/tvPaymentAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0 VNĐ"
+                android:text="@string/_0_vn"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorTextPrimary" />
@@ -73,7 +73,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Trạng thái:"
+                android:text="@string/tr_ng_th_i"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary" />
 
@@ -81,7 +81,7 @@
                 android:id="@+id/tvPaymentStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hoàn thành"
+                android:text="@string/ho_n_th_nh"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorSuccess" />
@@ -98,7 +98,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Phương thức:"
+                android:text="@string/ph_ng_th_c"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary" />
 
@@ -106,7 +106,7 @@
                 android:id="@+id/tvPaymentMethod"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ví MoMo"
+                android:text="@string/v_momo"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextPrimary" />
 
@@ -122,7 +122,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Mã giao dịch:"
+                android:text="@string/m_giao_d_ch"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary" />
 
@@ -130,7 +130,7 @@
                 android:id="@+id/tvTransactionId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TXN001"
+                android:text="@string/txn001"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextPrimary"
                 android:textIsSelectable="true" />
@@ -146,7 +146,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Thời gian:"
+                android:text="@string/th_i_gian"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary" />
 
@@ -154,7 +154,7 @@
                 android:id="@+id/tvPaymentDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="01/01/2024 10:30"
+                android:text="@string/_01_01_2024_10_30"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextPrimary" />
 

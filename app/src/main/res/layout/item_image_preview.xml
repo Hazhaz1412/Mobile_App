@@ -28,7 +28,7 @@
             android:layout_margin="4dp"
             android:background="@drawable/remove"
             android:src="@drawable/close"
-            android:contentDescription="Xóa hình"
+            android:contentDescription="@string/ng"
             android:padding="4dp" />
 
     </FrameLayout>

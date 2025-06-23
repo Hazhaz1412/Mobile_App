@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tài khoản"
+            android:text="@string/t_i_kho_n1"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextPrimary"
@@ -25,7 +25,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Quyền riêng tư"
+            android:text="@string/quy_n_ri_ng_t"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextPrimary"
@@ -52,7 +52,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Danh sách đã chặn"
+                android:text="@string/danh_s_ch_ch_n"
                 android:textSize="16sp"
                 android:textColor="@color/colorTextPrimary"
                 android:layout_marginLeft="16dp" />
@@ -61,7 +61,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_arrow_forward"
-                android:tint="@color/colorTextSecondary" />
+                app:tint="@color/colorTextSecondary" />
 
         </LinearLayout>
 

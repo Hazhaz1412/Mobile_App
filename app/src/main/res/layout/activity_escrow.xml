@@ -21,13 +21,13 @@
             android:layout_height="40dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
-            android:contentDescription="Quay lại" />
+            android:contentDescription="@string/quay_l_i" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🔒 Quản lý bảo vệ thanh toán"
+            android:text="@string/qu_n_l_b_o_v_thanh_to_n"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#2E7D32"
@@ -39,7 +39,7 @@
             android:layout_height="40dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_refresh"
-            android:contentDescription="Làm mới" />
+            android:contentDescription="@string/l_m_m_i" />
 
     </LinearLayout>
 
@@ -71,7 +71,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📋 Thông tin giao dịch"
+                        android:text="@string/th_ng_tin_giao_d_ch"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1976D2"
@@ -81,7 +81,7 @@
                         android:id="@+id/tvPaymentId"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Mã giao dịch: #12345"
+                        android:text="@string/m_giao_d_ch_12345"
                         android:textSize="14sp"
                         android:textColor="#424242"
                         android:paddingBottom="8dp" />
@@ -90,7 +90,7 @@
                         android:id="@+id/tvEscrowStatus"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Trạng thái: 🔒 Đang bảo vệ"
+                        android:text="@string/tr_ng_th_i_ang_b_o_v"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#2E7D32"
@@ -100,7 +100,7 @@
                         android:id="@+id/tvDaysRemaining"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian bảo vệ: 5 ngày"
+                        android:text="@string/th_i_gian_b_o_v_5_ng_y"
                         android:textSize="14sp"
                         android:textColor="#FF9800"
                         android:paddingBottom="8dp"
@@ -110,7 +110,7 @@
                         android:id="@+id/tvHoldUntil"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Bảo vệ đến: 2024-01-15"
+                        android:text="@string/b_o_v_n_2024_01_15"
                         android:textSize="14sp"
                         android:textColor="#666666"
                         android:visibility="visible" />
@@ -137,7 +137,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="ℹ️ Bảo vệ thanh toán là gì?"
+                        android:text="@string/b_o_v_thanh_to_n_l_g"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1976D2"
@@ -146,7 +146,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="• 🔒 Tiền được giữ an toàn trong 7 ngày\n• ✅ Bạn xác nhận thanh toán khi hài lòng\n• ⚠️ Báo cáo tranh chấp nếu có vấn đề\n• ↩️ Hoàn tiền tự động nếu có tranh chấp"
+                        android:text="@string/ti_n_c_gi_an_to_n_trong_7_ng_y_n_b_n_x_c_nh_n_thanh_to_n_khi_h_i_l_ng_n_b_o_c_o_tranh_ch_p_n_u_c_v_n_n_ho_n_ti_n_t_ng_n_u_c_tranh_ch_p"
                         android:textSize="14sp"
                         android:textColor="#666666"
                         android:lineSpacingExtra="4dp" />
@@ -167,7 +167,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:text="✅ Chấp nhận thanh toán"
+                    android:text="@string/ch_p_nh_n_thanh_to_n"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
@@ -179,7 +179,7 @@
                     android:id="@+id/btnReportDispute"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="⚠️ Báo cáo tranh chấp"
+                    android:text="@string/b_o_c_o_tranh_ch_p"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"

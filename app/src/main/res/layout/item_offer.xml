@@ -35,7 +35,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="⏳ Chờ phản hồi"
+                android:text="@string/ch_ph_n_h_i"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/warning_color" />
@@ -44,7 +44,7 @@
                 android:id="@+id/tvCreatedAt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2 giờ trước"
+                android:text="@string/gi_tr_c"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary" />
 
@@ -81,12 +81,11 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- Listing title -->
-                <TextView
+                <!-- Listing title -->                <TextView
                     android:id="@+id/tvListingTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="iPhone 13 Pro Max 256GB"
+                    android:text="@string/iphone_13_pro_max_256gb"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -98,7 +97,7 @@
                     android:id="@+id/tvBuyerName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="👤 nguyen_van_a"
+                    android:text="@string/nguyen_van_a3"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="4dp" />
@@ -114,7 +113,7 @@
                     <TextView                        android:id="@+id/tvOriginalPrice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Giá gốc: 25.000.000₫"
+                        android:text="@string/gi_g_c_25_000_0001"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary" />
 
@@ -122,7 +121,7 @@
                         android:id="@+id/tvDiscount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-15%"
+                        android:text="@string/_1512"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textColor="@color/success_color"
@@ -135,7 +134,7 @@
                     android:id="@+id/tvOfferAmount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="21.250.000₫"
+                    android:text="@string/_21_250_0003"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorPrimary"
@@ -150,7 +149,7 @@
             android:id="@+id/tvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💬 Tôi rất thích sản phẩm này. Bạn có thể giảm 15% không? Tôi sẽ mua ngay!"
+            android:text="@string/t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_15_kh_ng_t_i_s_mua_ngay1"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:background="@drawable/message_background"
@@ -164,7 +163,7 @@
             android:id="@+id/btnViewDetails"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:text="Phản hồi"            android:textSize="14sp"
+            android:text="@string/ph_n_h_i1"            android:textSize="14sp"
             android:textStyle="bold"
             android:backgroundTint="@color/colorPrimary"
             app:cornerRadius="12dp" />

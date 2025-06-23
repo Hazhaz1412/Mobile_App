@@ -524,10 +524,9 @@ public class FavoritesFragment extends Fragment {
     }
       /**
      * Show not logged in state
-     */
-    private void showNotLoggedInState() {
+     */    private void showNotLoggedInState() {
         if (tvEmptyState != null) {
-            tvEmptyState.setText("🔐 Bạn cần đăng nhập để xem danh sách yêu thích");
+            tvEmptyState.setText(getString(R.string.error_login_required_favorites));
         }
         
         if (layoutEmptyState != null) {

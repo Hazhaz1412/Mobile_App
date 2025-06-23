@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Tin nhắn"
+            android:text="@string/tin_nh_n"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -80,12 +80,12 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tất cả" />
+            android:text="@string/t_t_c" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chưa đọc" />
+            android:text="@string/ch_a_c" />
 
     </com.google.android.material.tabs.TabLayout>
 
@@ -130,7 +130,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Không có tin nhắn nào"
+                    android:text="@string/kh_ng_c_tin_nh_n_n_o"
                     android:textColor="#757575"
                     android:textSize="16sp" />
 
@@ -141,7 +141,7 @@
                     android:gravity="center"
                     android:paddingStart="32dp"
                     android:paddingEnd="32dp"
-                    android:text="Hãy bắt đầu trò chuyện với người bán bằng cách nhấn nút 'Liên hệ' trên trang sản phẩm."
+                    android:text="@string/h_y_b_t_u_tr_chuy_n"
                     android:textColor="#9E9E9E"
                     android:textSize="14sp" />
             </LinearLayout>

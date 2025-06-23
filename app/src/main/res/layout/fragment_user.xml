@@ -77,7 +77,7 @@
                         android:id="@+id/tvDisplayName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tên người dùng"
+                        android:text="@string/t_n_ng_i_d_ng"
                         android:textColor="@color/black"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -98,7 +98,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="4.5 (120 đánh giá)"
+                        android:text="@string/rating_text"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="12sp" />
 
@@ -108,7 +108,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Chỉnh sửa hồ sơ"
+                        android:text="@string/ch_nh_s_a_h_s"
                         android:textColor="@color/purple_500"
                         app:strokeColor="@color/purple_500" />
                 </LinearLayout>
@@ -131,7 +131,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Thông tin cá nhân"
+                        android:text="@string/th_ng_tin_c_nh_n"
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -140,7 +140,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Giới thiệu"
+                        android:text="@string/gi_i_thi_u_section"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="14sp" />
 
@@ -163,7 +163,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Thông tin liên hệ"
+                        android:text="@string/th_ng_tin_li_n_h_section"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="14sp" />
 
@@ -232,7 +232,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Thanh toán"
+                        android:text="@string/thanh_to_n_section"
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />                    <com.google.android.material.button.MaterialButton
@@ -241,7 +241,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Lịch sử thanh toán"
+                        android:text="@string/l_ch_s_thanh_to_n"
                         android:textColor="@color/colorPrimary"
                         app:icon="@drawable/ic_payment"
                         app:iconTint="@color/colorPrimary"
@@ -253,7 +253,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="❤️ Danh sách yêu thích"
+                        android:text="@string/danh_s_ch_y_u_th_ch_button"
                         android:textColor="@color/error_color"
                         app:icon="@drawable/ic_favorite"
                         app:iconTint="@color/error_color"
@@ -263,7 +263,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="🤝 Quản lý yêu cầu giảm giá"
+                        android:text="@string/qu_n_l_y_u_c_u_gi_m_gi"
                         android:textColor="@color/success_color"
                         app:icon="@drawable/ic_money"
                         app:iconTint="@color/success_color"
@@ -275,7 +275,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="📝 Yêu cầu của tôi"
+                        android:text="@string/y_u_c_u_c_a_t_i"
                         android:textColor="@color/info_color"
                         app:icon="@drawable/ic_money"
                         app:iconTint="@color/info_color"
@@ -302,7 +302,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Quản lý tài khoản"
+                        android:text="@string/qu_n_l_t_i_kho_n"
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />                    <com.google.android.material.button.MaterialButton
@@ -311,7 +311,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Đăng xuất"
+                        android:text="@string/ng_xu_t"
                         android:textColor="@color/black"
                         app:icon="@drawable/logout"
                         app:iconTint="@color/black"
@@ -323,7 +323,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Cài đặt thông báo"
+                        android:text="@string/c_i_t_th_ng_b_o"
                         android:textColor="@color/purple_500"
                         app:icon="@drawable/notification"
                         app:iconTint="@color/purple_500"
@@ -335,7 +335,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Tạm ngưng tài khoản"
+                        android:text="@string/t_m_ng_ng_t_i_kho_n"
                         android:textColor="#FF9800"
                         app:icon="@drawable/pause"
                         app:iconTint="#FF9800"
@@ -347,7 +347,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Xóa tài khoản vĩnh viễn"
+                        android:text="@string/x_a_t_i_kho_n_v_nh_vi_n"
                         android:textColor="#F44336"
                         app:icon="@drawable/bin"
                         app:iconTint="#F44336"

@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="⚠️ Mô tả vấn đề gặp phải"
+        android:text="@string/m_t_v_n_g_p_ph_i"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="#F57C00"
@@ -17,7 +17,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Vui lòng mô tả chi tiết vấn đề bạn gặp phải với đơn hàng này. Thông tin này sẽ giúp chúng tôi xử lý tranh chấp một cách công bằng."
+        android:text="@string/vui_l_ng_m_t_chi_ti_t_v_n_b_n_g_p_ph_i_v_i_n_h_ng_n_y_th_ng_tin_n_y_s_gi_p_ch_ng_t_i_x_l_tranh_ch_p_m_t_c_ch_c_ng_b_ng"
         android:textSize="14sp"
         android:textColor="#666666"
         android:paddingBottom="16dp"
@@ -26,7 +26,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nhập lý do tranh chấp..."
+        android:hint="@string/nh_p_l_do_tranh_ch_p"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -45,7 +45,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ví dụ: Hàng không đúng mô tả, hàng bị hỏng, không nhận được hàng..."
+        android:text="@string/v_d_h_ng_kh_ng_ng_m_t_h_ng_b_h_ng_kh_ng_nh_n_c_h_ng"
         android:textSize="12sp"
         android:textColor="#999999"
         android:paddingTop="8dp"
@@ -65,7 +65,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="ℹ️ Sau khi gửi báo cáo, hệ thống sẽ xem xét trong 24-48 giờ và thông báo kết quả qua email."
+            android:text="@string/sau_khi_g_i_b_o_c_o_h_th_ng_s_xem_x_t_trong_24_48_gi_v_th_ng_b_o_k_t_qu_qua_email"
             android:textSize="12sp"
             android:textColor="#E65100"
             android:lineSpacingExtra="2dp" />

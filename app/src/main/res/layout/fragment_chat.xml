@@ -42,7 +42,7 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Tên người nhận"
+                android:text="@string/t_n_ng_i_nh_n"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />            <ImageButton
@@ -61,7 +61,7 @@
                 android:layout_marginEnd="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_popup_reminder"
-                android:contentDescription="Test Notification"
+                android:contentDescription="@string/test_notification"
                 app:tint="@color/white" />
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
@@ -75,47 +75,11 @@
         android:orientation="horizontal"
         android:padding="8dp">
 
-        <ImageView
-            android:id="@+id/ivListingImage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/placeholder_image" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tvListingTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Tiêu đề sản phẩm"
-                android:textColor="@android:color/black"
-                android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/tvListingPrice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="500.000 VNĐ"
-                android:textColor="@color/primary_color"
-                android:textSize="12sp" />
-        </LinearLayout>
 
-        <Button
-            android:id="@+id/btnViewListing"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="@drawable/rounded_button"
-            android:text="Xem"
-            android:textColor="@android:color/white"
-            android:textSize="12sp" />    </LinearLayout>    <!-- Progress Bar for loading -->
+           </LinearLayout>    <!-- Progress Bar for loading -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"

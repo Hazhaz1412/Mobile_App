@@ -25,15 +25,15 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
-                android:tint="@android:color/white"
-                android:contentDescription="Quay lại" />
+                android:contentDescription="@string/quay_l_i2"
+                app:tint="@android:color/white" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="16dp"
-                android:text="Đánh giá giao dịch"
+                android:text="@string/nh_gi_giao_d_ch"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -68,7 +68,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:gravity="center"
-                        android:text="Đánh giá người bán"
+                        android:text="@string/nh_gi_ng_i_b_n"
                         android:textColor="@color/colorPrimary"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -80,7 +80,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="24dp"
                         android:gravity="center"
-                        android:text="Đánh giá người bán cho giao dịch này"
+                        android:text="@string/nh_gi_ng_i_b_n_cho_giao_d_ch_n_y"
                         android:textColor="#666666"
                         android:textSize="14sp" />
 
@@ -100,7 +100,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Nhận xét (tùy chọn)"
+                        android:text="@string/nh_n_x_t_t_y_ch_n"
                         android:textColor="#333333"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -111,7 +111,7 @@
                         android:layout_height="120dp"
                         android:background="@drawable/edit_text_background"
                         android:gravity="top|start"
-                        android:hint="Chia sẻ trải nghiệm của bạn về giao dịch này..."
+                        android:hint="@string/chia_s_tr_i_nghi_m_c_a_b_n_v_giao_d_ch_n_y"
                         android:inputType="textMultiLine|textCapSentences"
                         android:maxLength="500"
                         android:padding="12dp"
@@ -135,7 +135,7 @@
                     android:layout_height="52dp"
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/button_primary_background"
-                    android:text="Gửi đánh giá"
+                    android:text="@string/g_i_nh_gi"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -145,7 +145,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:background="@drawable/button_secondary_background"
-                    android:text="Bỏ qua (đánh giá sau)"
+                    android:text="@string/b_qua_nh_gi_sau"
                     android:textColor="@color/colorPrimary"
                     android:textSize="16sp" />
 
@@ -157,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="💡 Đánh giá giúp cộng đồng xây dựng niềm tin và cải thiện trải nghiệm mua bán"
+                android:text="@string/nh_gi_gi_p_c_ng_ng_x_y_d_ng_ni_m_tin_v_c_i_thi_n_tr_i_nghi_m_mua_b_n"
                 android:textColor="#666666"
                 android:textSize="12sp" />
 

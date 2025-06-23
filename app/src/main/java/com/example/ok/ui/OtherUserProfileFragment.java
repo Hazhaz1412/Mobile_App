@@ -231,13 +231,11 @@ public class OtherUserProfileFragment extends Fragment {
         
         // Check block status after UI is updated
         checkBlockStatus();
-    }
-
-    private void openChatWithUser() {
+    }    private void openChatWithUser() {
         if (userId == null || currentUserId == null) {
-            Toast.makeText(requireContext(), "Không thể mở chat", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), getString(R.string.error_cannot_open_chat), Toast.LENGTH_SHORT).show();
             return;
-        }        // Navigate to ChatFragment
+        }// Navigate to ChatFragment
         ChatFragment chatFragment = ChatFragment.newInstance(
                 -1, // roomId will be created
                 currentUserId,

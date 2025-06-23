@@ -31,7 +31,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Xem trước tin đăng"
+                android:text="@string/xem_tr_c_tin_ng"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -43,7 +43,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/close"
                 app:tint="@color/white"
-                android:contentDescription="Đóng" />
+                android:contentDescription="@string/ng" />
 
         </LinearLayout>
 
@@ -66,7 +66,7 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="12dp"
                 android:background="@drawable/bg_image_counter"
-                android:text="1/5"
+                android:text="@string/_1_5"
                 android:textColor="@color/white"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -92,7 +92,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chưa có hình ảnh"
+                    android:text="@string/ch_a_c_h_nh_nh"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
@@ -112,7 +112,7 @@
                 android:id="@+id/tvPreviewTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tiêu đề sản phẩm"
+                android:text="@string/ti_u_s_n_ph_m"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -122,7 +122,7 @@
                 android:id="@+id/tvPreviewPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="1,000,000 VNĐ"
+                android:text=""
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/price_color"
@@ -139,7 +139,7 @@
                     android:id="@+id/tvPreviewCategory"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Điện tử"
+                    android:text="@string/i_n_t1"
                     android:textSize="12sp"
                     android:textColor="@color/white"
                     android:background="@drawable/bg_category_tag"
@@ -151,7 +151,7 @@
                     android:id="@+id/tvPreviewCondition"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Như mới"
+                    android:text="@string/nh_m_i"
                     android:textSize="12sp"
                     android:textColor="@color/primary_color"
                     android:background="@drawable/bg_condition_tag"
@@ -164,7 +164,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mô tả"
+                android:text="@string/m_t"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -174,7 +174,7 @@
                 android:id="@+id/tvPreviewDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mô tả chi tiết sản phẩm..."
+                android:text="@string/m_t_chi_ti_t_s_n_ph_m"
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary"
                 android:lineSpacingExtra="4dp"
@@ -200,7 +200,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Hà Nội, Việt Nam"
+                    android:text="@string/h_n_i_vi_t_nam"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary" />
 
@@ -211,7 +211,7 @@
                 android:id="@+id/tvTagsLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tags"
+                android:text="@string/tags"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -258,7 +258,7 @@
                         android:id="@+id/tvSellerName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Tên người bán"
+                        android:text="@string/t_n_ng_i_b_n"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/accent_color" />
@@ -266,7 +266,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Thành viên từ 2024"
+                        android:text="@string/th_nh_vi_n_t_2024"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary" />
 
@@ -300,7 +300,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Chỉnh sửa"
+                android:text="@string/ch_nh_s_a"
                 android:drawableStart="@drawable/edit"
                 android:drawablePadding="8dp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
@@ -311,7 +311,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Đăng tin"
+                android:text="@string/ng_tin"
                 android:drawableStart="@drawable/publish"
                 android:drawablePadding="8dp"
                 android:backgroundTint="@color/primary_color"

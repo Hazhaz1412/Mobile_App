@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="Tên hiển thị">
+        android:hint="@string/t_n_hi_n_th">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etDisplayName"
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="Giới thiệu">
+        android:hint="@string/gi_i_thi_u">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etBio"
@@ -40,7 +40,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Thông tin liên hệ">
+        android:hint="@string/th_ng_tin_li_n_h">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etContactInfo"

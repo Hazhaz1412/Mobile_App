@@ -53,4 +53,313 @@
     <string name="chat">Chat</string>
     <string name="b_i_ng">Bài đăng</string>
     <string name="trang_ch">Trang chủ</string>
+    <string name="s_ti_n">Số tiền:</string>
+    <string name="_0_vn">0 VNĐ</string>
+    <string name="tr_ng_th_i">Trạng thái:</string>
+    <string name="ho_n_th_nh">Hoàn thành</string>
+    <string name="ph_ng_th_c">Phương thức:</string>
+    <string name="v_momo">Ví MoMo</string>
+    <string name="m_giao_d_ch">Mã giao dịch:</string>
+    <string name="txn001">TXN001</string>
+    <string name="th_i_gian">Thời gian:</string>
+    <string name="_01_01_2024_10_30">01/01/2024 10:30</string>
+    <string name="t_n_s_n_ph_m">Tên sản phẩm</string>
+    <string name="quay_l_i">Quay lại</string>
+    <string name="qu_n_l_b_o_v_thanh_to_n">🔒 Quản lý bảo vệ thanh toán</string>
+    <string name="l_m_m_i">Làm mới</string>
+    <string name="th_ng_tin_giao_d_ch">📋 Thông tin giao dịch</string>
+    <string name="m_giao_d_ch_12345">Mã giao dịch: #12345</string>
+    <string name="tr_ng_th_i_ang_b_o_v">Trạng thái: 🔒 Đang bảo vệ</string>
+    <string name="th_i_gian_b_o_v_5_ng_y">Thời gian bảo vệ: 5 ngày</string>
+    <string name="b_o_v_n_2024_01_15">Bảo vệ đến: 2024-01-15</string>
+    <string name="b_o_v_thanh_to_n_l_g">ℹ️ Bảo vệ thanh toán là gì?</string>
+    <string name="ti_n_c_gi_an_to_n_trong_7_ng_y_n_b_n_x_c_nh_n_thanh_to_n_khi_h_i_l_ng_n_b_o_c_o_tranh_ch_p_n_u_c_v_n_n_ho_n_ti_n_t_ng_n_u_c_tranh_ch_p">• 🔒 Tiền được giữ an toàn trong 7 ngày\n• ✅ Bạn xác nhận thanh toán khi hài lòng\n• ⚠️ Báo cáo tranh chấp nếu có vấn đề\n• ↩️ Hoàn tiền tự động nếu có tranh chấp</string>    <string name="ch_p_nh_n_thanh_to_n">✅ Chấp nhận thanh toán</string>
+    <string name="b_o_c_o_tranh_ch_p">⚠️ Báo cáo tranh chấp</string>
+    
+    <!-- Error messages -->
+    <string name="error_login_required_listings">Bạn cần đăng nhập để xem tin đăng</string>
+    <string name="error_login_required_profile">Bạn cần đăng nhập để xem hồ sơ</string>
+    <string name="error_cannot_open_user_profile">Không thể mở profile người dùng</string>
+    <string name="error_cannot_open_offer_management">Không thể mở quản lý yêu cầu giảm giá</string>
+    <string name="error_cannot_open_my_offers">Không thể mở yêu cầu của tôi</string>
+    <string name="error_cannot_open_favorites">Không thể mở danh sách yêu thích</string>
+    
+    <!-- Success messages -->
+    <string name="success_home_fragment_loaded">Home fragment loaded</string>
+    <string name="success_fragment_loaded">Fragment loaded successfully</string>
+    <string name="success_navigated_to_other_profile">Navigated to other user profile: %1$s (ID: %2$d)</string>
+    <string name="success_navigated_to_offer_management">Navigated to offer management</string>
+    <string name="success_navigated_to_my_offers">Navigated to my offers</string>
+    <string name="success_navigated_to_favorites">Navigated to favorites</string>
+    
+    <!-- Log messages -->
+    <string name="log_home_clicked">Trang chủ clicked!</string>
+    <string name="log_loading_fragment">Loading fragment: %s</string>
+    <string name="log_error_loading_fragment">Error loading fragment</string>
+    <string name="log_opened_chat_notification">Opened chat from notification: roomId=%1$d, other=%2$s</string>
+    <string name="log_opened_chat_legacy">Opened chat from legacy notification: roomId=%d</string>
+    <string name="log_opened_listing_notification">Opened listing from notification: %d</string>    <string name="log_invalid_chat_params">Invalid chat parameters in notification intent</string>
+      <!-- Favorites -->
+    <string name="error_login_required_favorites">🔐 Bạn cần đăng nhập để xem danh sách yêu thích</string>
+    
+    <!-- Chat errors -->
+    <string name="error_cannot_open_gallery">Không thể mở thư viện ảnh: %s</string>
+    <string name="error_cannot_open_camera">Không thể mở camera: %s</string>
+    <string name="error_cannot_open_chat">Không thể mở chat</string>
+    
+    <!-- Payment errors -->
+    <string name="error_cannot_open_momo">Không thể mở ứng dụng MoMo</string>
+    <string name="error_cannot_open_payment">Không thể mở trang thanh toán</string>
+    
+    <!-- Profile errors -->
+    <string name="error_cannot_open_seller_profile">Không thể mở profile người bán</string>
+    <string name="th_m_th_thanh_to_n">Thêm thẻ thanh toán</string>
+    <string name="s_th">Số thẻ</string>
+    <string name="mm_yy">MM/YY</string>
+    <string name="cvv">CVV</string>
+    <string name="t_n_ch_th">Tên chủ thẻ</string>
+    <string name="th_ng_tin_th_s_c_m_h_a_v_b_o_m_t">Thông tin thẻ sẽ được mã hóa và bảo mật</string>
+    <string name="th_m_v_momo">Thêm ví MoMo</string>
+    <string name="s_i_n_tho_i">Số điện thoại</string>
+    <string name="nh_p_s_i_n_tho_i_ng_k_v_i_momo">Nhập số điện thoại đã đăng ký với MoMo</string>
+    <string name="m_t_chi_ti_t_l_do_b_o_c_o">Mô tả chi tiết lý do báo cáo:</string>
+    <string name="nh_p_l_do_b_o_c_o">Nhập lý do báo cáo...</string>
+    <string name="b_o_c_o_c_a_b_n_s_c_xem_x_t_v_x_l_trong_v_ng_24_gi">Báo cáo của bạn sẽ được xem xét và xử lý trong vòng 24 giờ.</string>
+    <string name="t_n_hi_n_th">Tên hiển thị</string>
+    <string name="gi_i_thi_u">Giới thiệu</string>
+    <string name="th_ng_tin_li_n_h">Thông tin liên hệ</string>
+    <string name="x_c_th_c_email">Xác thực email</string>
+    <string name="ch_ng_t_i_g_i_m_x_c_th_c_n_email_c_a_b_n_vui_l_ng_nh_p_m_ti_p_t_c">Chúng tôi đã gửi mã xác thực đến email của bạn. Vui lòng nhập mã để tiếp tục.</string>
+    <string name="nh_p_m_x_c_th_c_6_ch_s">Nhập mã xác thực (6 chữ số)</string>
+    <string name="g_i_l_i_m">Gửi lại mã</string>
+    <string name="h_y">Hủy</string>
+    <string name="x_c_th_c">Xác thực</string>
+    <string name="xem_tr_c_tin_ng">Xem trước tin đăng</string>
+    <string name="ng">Đóng</string>
+    <string name="_1_5">1/5</string>
+    <string name="ch_a_c_h_nh_nh">Chưa có hình ảnh</string>
+    <string name="ti_u_s_n_ph_m">Tiêu đề sản phẩm</string>
+    <string name="i_n_t1">Điện tử</string>
+    <string name="nh_m_i">Như mới</string>
+    <string name="m_t">Mô tả</string>
+    <string name="m_t_chi_ti_t_s_n_ph_m">Mô tả chi tiết sản phẩm...</string>
+    <string name="h_n_i_vi_t_nam">Hà Nội, Việt Nam</string>
+    <string name="tags">Tags</string>
+    <string name="t_n_ng_i_b_n">Tên người bán</string>
+    <string name="th_nh_vi_n_t_2024">Thành viên từ 2024</string>
+    <string name="ch_nh_s_a">Chỉnh sửa</string>
+    <string name="ng_tin">Đăng tin</string>
+    <string name="l_c_theo_a_i_m">Lọc theo địa điểm</string>
+    <string name="nh_p_t_n_th_nh_ph_qu_n_huy_n">Nhập tên thành phố, quận, huyện...</string>
+    <string name="a_i_m_ph_bi_n">Địa điểm phổ biến</string>
+    <string name="t_l_i">Đặt lại</string>
+    <string name="p_d_ng">Áp dụng</string>
+    <string name="gi_hi_n_t_i_0_vn">Giá hiện tại: 0 VNĐ</string>
+    <string name="t_y_ch_n_nhanh">Tùy chọn nhanh:</string>
+    <string name="_5">-5%</string>
+    <string name="_10">-10%</string>
+    <string name="_15">-15%</string>
+    <string name="ho_c_nh_p_gi_mong_mu_n_vn">Hoặc nhập giá mong muốn (VNĐ)</string>
+    <string name="l_do_y_u_c_u_gi_m_gi_t_y_ch_n">Lý do yêu cầu giảm giá (tùy chọn)</string>
+    <string name="m_o_a_ra_l_do_h_p_l_s_t_ng_kh_n_ng_ng_i_b_n_ch_p_nh_n_y_u_c_u_c_a_b_n">💡 Mẹo: Đưa ra lý do hợp lý sẽ tăng khả năng người bán chấp nhận yêu cầu của bạn.</string>
+    <string name="momo_logo">MoMo Logo</string>
+    <string name="chi_ti_t_y_u_c_u">Chi tiết yêu cầu</string>
+    <string name="ng1">Đóng</string>
+    <string name="ch_ph_n_h_i_t_ng_i_b_n">⏳ Chờ phản hồi từ người bán</string>
+    <string name="iphone_13_pro_max_256gb">iPhone 13 Pro Max 256GB</string>
+    <string name="ng_i_b_n_nguyen_van_a">Người bán: nguyen_van_a</string>
+    <string name="gi_g_c_25_000_000">Giá gốc: 25.000.000đ</string>
+    <string name="gi_xu_t_21_000_000">Giá đề xuất: 21.000.000đ</string>
+    <string name="gi_m_16">Giảm 16%</string>
+    <string name="tin_nh_n_t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_gi_kh_ng">Tin nhắn: Tôi rất thích sản phẩm này. Bạn có thể giảm giá không?</string>
+    <string name="ng_y_t_o_2025_06_17_14_30">Ngày tạo: 2025-06-17 14:30</string>
+    <string name="c_p_nh_t_2025_06_19_10_15">Cập nhật: 2025-06-19 10:15</string>
+    <string name="mua_ngay">MUA NGAY</string>
+    <string name="r_t_l_i">Rút lại</string>
+    <string name="xem_s_n_ph_m">Xem sản phẩm</string>
+    <string name="chi_ti_t_y_u_c_u_gi_m_gi">🤝 Chi tiết yêu cầu giảm giá</string>
+    <string name="ch_ph_n_h_i_c_a_b_n">⏳ Chờ phản hồi của bạn</string>
+    <string name="iphone_13_pro_max_256gb1">iPhone 13 Pro Max 256GB</string>
+    <string name="nva1">👤 nguyen_van_a</string>
+    <string name="g_i_2_gi_tr_c">Đã gửi: 2 giờ trước</string>
+    <string name="so_s_nh_gi">💰 So sánh giá</string>
+    <string name="gi_b_n">Giá bán</string>
+    <string name="arr">→</string>
+    <string name="gi_ngh">Giá đề nghị</string>
+    <string name="_21_250_000">21.250.000₫</string>
+    <string name="_151">-15%</string>
+    <string name="tin_nh_n_t_ng_i_mua">💬 Tin nhắn từ người mua</string>
+    <string name="t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_15_kh_ng_t_i_s_mua_ngay">Tôi rất thích sản phẩm này. Bạn có thể giảm 15% không? Tôi sẽ mua ngay!</string>
+    <string name="gi_tr_l_i_vnd">Giá trả lại (VND)</string>
+    <string name="tin_nh_n_ph_n_h_i_tu_ch_n">Tin nhắn phản hồi (tuỳ chọn)</string>
+    <string name="t_ch_i">❌ Từ chối</string>
+    <string name="tr_gi">↩️ Trả giá</string>
+    <string name="ch_p_nh_n">✅ Chấp nhận</string>
+    <string name="l_c_theo_gi">Lọc theo giá</string>
+    <string name="_01">0đ</string>
+    <string name="_10_tri_u1">10 triệu đ</string>
+    
+    <!-- Missing strings for item_offer.xml -->
+    <string name="cc">Chọn</string>
+    <string name="nguyen_van_a3">Nguyễn Văn A</string>
+    <string name="gi_g_c_25_000_0001">Giá gốc: 25.000.000đ</string>
+    <string name="_1512">-15%</string>
+    <string name="_21_250_0003">21.250.000đ</string>
+    <string name="t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_15_kh_ng_t_i_s_mua_ngay1">Tôi rất thích sản phẩm này. Bạn có thể giảm 15% không? Tôi sẽ mua ngay!</string>
+    <string name="ph_n_h_i1">Phản hồi</string>
+    
+    <!-- Missing strings for item_payment_history.xml -->
+    <string name="s_n_ph_m1">Sản phẩm</string>
+    <string name="ng_i_b_n_n_a1">Người bán nào đó</string>
+    <string name="id_n_a1">ID: #12345</string>
+    <string name="_0_vnd1">2.500.000 VNĐ</string>
+    <string name="tr_ng_th_i2">Trạng thái</string>
+    <string name="_01_01_2024">01/01/2024</string>
+    <string name="nh_gi1">Đánh giá</string>
+    <string name="h_y_n1">Hủy đơn</string>
+    
+    <!-- Missing strings for activity_main.xml -->
+    <string name="button">Nút</string>
+    
+    <!-- Missing strings for activity_payment.xml -->
+    <string name="quay_l_i1">Quay lại</string>
+    <string name="thanh_to_n">Thanh toán</string>
+    <string name="t_n_s_n_ph_m1">Tên sản phẩm</string>
+    <string name="_0_vn1">2.500.000 VNĐ</string>
+    <string name="ng_i_b_n">Người bán</string>
+    <string name="ph_ng_th_c_thanh_to_n">Phương thức thanh toán</string>
+    <string name="th_m_ph_ng_th_c_thanh_to_n">Thêm phương thức thanh toán</string>
+    <string name="s_d_ng_escrow_b_o_v_giao_d_ch">Sử dụng Escrow bảo vệ giao dịch</string>
+    <string name="escrow_gi_p_b_o_v_giao_d_ch_c_a_b_n">Escrow giúp bảo vệ giao dịch của bạn</string>
+    <string name="ti_n_h_nh_thanh_to_n">Tiến hành thanh toán</string>
+    
+    <!-- Missing strings for activity_rating.xml -->
+    <string name="quay_l_i2">Quay lại</string>
+    <string name="nh_gi_giao_d_ch">Đánh giá giao dịch</string>
+    <string name="nh_gi_ng_i_b_n">Đánh giá người bán</string>
+    <string name="nh_gi_ng_i_b_n_cho_giao_d_ch_n_y">Đánh giá người bán cho giao dịch này</string>
+    <string name="nh_n_x_t_t_y_ch_n">Nhận xét (tùy chọn)</string>
+    <string name="chia_s_tr_i_nghi_m_c_a_b_n_v_giao_d_ch_n_y">Chia sẻ trải nghiệm của bạn về giao dịch này...</string>
+    <string name="g_i_nh_gi">Gửi đánh giá</string>
+    <string name="b_qua_nh_gi_sau">Bỏ qua (đánh giá sau)</string>
+    <string name="nh_gi_gi_p_c_ng_ng_x_y_d_ng_ni_m_tin_v_c_i_thi_n_tr_i_nghi_m_mua_b_n">Đánh giá giúp cộng đồng xây dựng niềm tin và cải thiện trải nghiệm mua bán</string>
+    
+    <!-- Missing strings for activity_reset_password.xml -->
+    <string name="m_t_kh_u_m_i">Mật khẩu mới</string>
+    <string name="x_c_nh_n_m_t_kh_u">Xác nhận mật khẩu</string>
+    <string name="t_l_i_m_t_kh_u">Đặt lại mật khẩu</string>
+    
+    <!-- Missing strings for activity_user_profile.xml -->
+    <string name="t_i_kho_n1">Tài khoản</string>
+    <string name="quy_n_ri_ng_t">Quyền riêng tư</string>
+    <string name="danh_s_ch_ch_n">Danh sách chặn</string>
+    
+    <!-- Missing strings for dialog_momo_confirm.xml -->
+    <string name="x_c_nh_n_thanh_to_n_momo">Xác nhận thanh toán MoMo</string>
+    <string name="b_n_ho_n_th_nh_thanh_to_n_qua_momo">Bạn hoàn thành thanh toán qua MoMo</string>
+    <string name="m_giao_d_ch_dialog">#GD123456</string>
+    <string name="h_y_dialog">Hủy</string>
+    <string name="x_c_nh_n">Xác nhận</string>
+    
+    <!-- Missing strings for dialog_price_filter.xml -->
+    <string name="t_l_i1">Đặt lại</string>
+    <string name="p_d_ng1">Áp dụng</string>
+    
+    <!-- Missing strings for dialog_qr_code.xml -->
+    <string name="qr_code">QR Code</string>
+    <string name="qu_t_m_qr_n_y_b_ng_ng_d_ng_momo_thanh_to_n">Quét mã QR này bằng ứng dụng MoMo để thanh toán</string>
+    
+    <!-- Missing strings for dialog_report_chat.xml -->
+    <string name="l_do_b_o_c_o">Lý do báo cáo</string>
+    <string name="m_t_chi_ti_t_t_y_ch_n">Mô tả chi tiết (tùy chọn)</string>
+    <string name="m_t_v_h_nh_vi_kh_ng_ph_h_p_trong_cu_c_tr_chuy_n">Mô tả về hành vi không phù hợp trong cuộc trò chuyện...</string>
+    <string name="b_o_c_o_sai_c_th_nh_h_ng_n_uy_t_n_c_a_b_n">⚠️ Báo cáo sai có thể ảnh hưởng đến uy tín của bạn</string>
+    
+    <!-- Missing strings for dialog_report_dispute.xml -->
+    <string name="m_t_v_n_g_p_ph_i">Mô tả về vấn đề gặp phải</string>
+    <string name="vui_l_ng_m_t_chi_ti_t_v_n_b_n_g_p_ph_i_v_i_n_h_ng_n_y_th_ng_tin_n_y_s_gi_p_ch_ng_t_i_x_l_tranh_ch_p_m_t_c_ch_c_ng_b_ng">Vui lòng mô tả chi tiết vấn đề bạn gặp phải với đơn hàng này. Thông tin này sẽ giúp chúng tôi xử lý tranh chấp một cách công bằng</string>
+    <string name="nh_p_l_do_tranh_ch_p">Nhập lý do tranh chấp...</string>
+    <string name="v_d_h_ng_kh_ng_ng_m_t_h_ng_b_h_ng_kh_ng_nh_n_c_h_ng">Ví dụ: Hàng không đúng mô tả, hàng bị hỏng, không nhận được hàng...</string>
+    <string name="sau_khi_g_i_b_o_c_o_h_th_ng_s_xem_x_t_trong_24_48_gi_v_th_ng_b_o_k_t_qu_qua_email">Sau khi gửi báo cáo, hệ thống sẽ xem xét trong 24-48 giờ và thông báo kết quả qua email</string>
+    
+    <!-- Missing strings for dialog_report_listing.xml -->
+    <string name="l_do_b_o_c_o1">Lý do báo cáo</string>
+    <string name="m_t_chi_ti_t_t_y_ch_n1">Mô tả chi tiết (tùy chọn)</string>
+    <string name="m_t_th_m_v_v_n_t_y_ch_n">Mô tả thêm về vấn đề (tùy chọn)...</string>
+    <string name="b_o_c_o_c_a_b_n_s_c_xem_x_t_trong_v_ng_24_gi">Báo cáo của bạn sẽ được xem xét trong vòng 24 giờ</string>
+    
+    <!-- Missing strings for fragment_admin_moderation.xml -->
+    <string name="qu_n_l_b_o_c_o">Quản lý báo cáo</string>
+    <string name="tr_ng_th_i1">Trạng thái</string>
+    <string name="lo_i_b_o_c_o">Loại báo cáo</string>
+    <string name="l_m_m_i1">Làm mới</string>
+    
+    <!-- Missing strings for fragment_blocked_users.xml -->
+    <string name="kh_ng_c_ng_i_d_ng_n_o_b_ch_n">Không có người dùng nào bị chặn</string>
+    <string name="danh_s_ch_ng_i_d_ng_ch_n_s_hi_n_th_y">Danh sách người dùng bị chặn sẽ hiển thị ở đây</string>
+    <string name="kh_ng_th_t_i_danh_s_ch">Không thể tải danh sách</string>
+    <string name="th_l_i">Thử lại</string>
+    
+    <!-- Missing strings for fragment_chat.xml -->
+    <string name="t_n_ng_i_nh_n">Tên người nhận</string>
+    <string name="test_notification">Test Notification</string>
+    
+    <!-- Missing strings for fragment_chat_inbox.xml -->
+    <string name="tin_nh_n">Tin nhắn</string>
+    <string name="t_t_c">Tất cả</string>
+    
+    <!-- More missing strings for fragment_chat_inbox.xml -->
+    <string name="ch_a_c">Chưa đọc</string>
+    <string name="kh_ng_c_tin_nh_n_n_o">Không có tin nhắn nào</string>
+    <string name="h_y_b_t_u_tr_chuy_n">Hãy bắt đầu trò chuyện!</string>
+    
+    <!-- Missing strings for fragment_favorites.xml -->
+    <string name="danh_s_ch_y_u_th_ch">Danh sách yêu thích</string>
+    <string name="nh_ng_s_n_ph_m_b_n_th_m_v_o_y_u_th_ch">Những sản phẩm bạn thêm vào yêu thích</string>
+    <string name="ch_a_c_s_n_ph_m_y_u_th_ch_n_o">Chưa có sản phẩm yêu thích nào</string>
+    <string name="th_l_i_retry">Thử lại</string>
+    
+    <!-- Missing strings for fragment_user.xml -->
+    <string name="t_n_ng_i_d_ng">Tên người dùng</string>
+    <string name="rating_text">4.8/5.0 (125 đánh giá)</string>
+    <string name="ch_nh_s_a_h_s">Chỉnh sửa hồ sơ</string>
+    <string name="th_ng_tin_c_nh_n">Thông tin cá nhân</string>
+    <string name="gi_i_thi_u_section">Giới thiệu</string>
+    <string name="th_ng_tin_li_n_h_section">Thông tin liên hệ</string>
+    <string name="thanh_to_n_section">Thanh toán</string>
+    <string name="l_ch_s_thanh_to_n">Lịch sử thanh toán</string>
+    <string name="danh_s_ch_y_u_th_ch_button">Danh sách yêu thích</string>
+    <string name="qu_n_l_y_u_c_u_gi_m_gi">Quản lý yêu cầu giảm giá</string>
+    <string name="y_u_c_u_c_a_t_i">Yêu cầu của tôi</string>
+    <string name="qu_n_l_t_i_kho_n">Quản lý tài khoản</string>
+    <string name="ng_xu_t">Đăng xuất</string>
+    
+    <!-- Final missing strings for fragment_user.xml -->
+    <string name="c_i_t_th_ng_b_o">Cài đặt thông báo</string>
+    <string name="t_m_ng_ng_t_i_kho_n">Tạm ngưng tài khoản</string>
+    <string name="x_a_t_i_kho_n_v_nh_vi_n">Xóa tài khoản vĩnh viễn</string>
+    
+    <!-- Missing strings for item_listing.xml -->
+    <string name="h_n_i">Hà Nội</string>
+    <string name="c_s_n">Còn sản</string>
+    
+    <!-- Missing strings for item_location.xml -->
+    <string name="a_i_m">Địa điểm</string>
+    
+    <!-- Missing strings for item_my_offer.xml -->
+    <string name="ch_ph_n_h_i">Chờ phản hồi</string>
+    <string name="ng_y_tr_c">2 ngày trước</string>
+    <string name="t_n_s_n_ph_m_sample">Tên sản phẩm mẫu</string>
+    <string name="gi_g_c_sample">Giá gốc mẫu</string>
+    <string name="gi_xu_t_sample">Giá đề xuất mẫu</string>
+    <string name="my_offer_message_sample">Tin nhắn đề xuất mẫu</string>
+    <string name="xem_chi_ti_t">Xem chi tiết</string>
+    
+    <!-- Missing strings for item_offer.xml -->
+    <string name="gi_tr_c">2 giờ trước</string>
+    
+    <!-- Missing strings for item_transaction.xml -->
+    <string name="listing_title">Tiêu đề sản phẩm</string>
+    <string name="ang_ch">Đang chờ</string>
+
 </resources>

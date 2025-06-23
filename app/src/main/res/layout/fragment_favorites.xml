@@ -26,7 +26,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="💝 Danh sách yêu thích"
+                android:text="@string/danh_s_ch_y_u_th_ch"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -35,7 +35,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Những sản phẩm bạn đã thêm vào yêu thích"
+                android:text="@string/nh_ng_s_n_ph_m_b_n_th_m_v_o_y_u_th_ch"
                 android:textSize="14sp"
                 android:textColor="#666666"
                 android:layout_gravity="center_horizontal"
@@ -66,7 +66,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="💝 Chưa có sản phẩm yêu thích nào\n\nHãy thêm sản phẩm vào danh sách yêu thích để xem ở đây!"
+                android:text="@string/ch_a_c_s_n_ph_m_y_u_th_ch_n_o"
                 android:textSize="16sp"
                 android:textColor="#888888"
                 android:lineSpacingExtra="8dp" />
@@ -77,7 +77,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/customwhitebutton"
-                android:text="🔄 Thử lại"
+                android:text="@string/th_l_i_retry"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:paddingHorizontal="24dp"

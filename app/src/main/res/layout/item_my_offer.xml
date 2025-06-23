@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="⏳ Chờ phản hồi"
+                android:text="@string/ch_ph_n_h_i"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/warning_color" />
@@ -43,7 +43,7 @@
                 android:id="@+id/tvCreatedAt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2 ngày trước"
+                android:text="@string/ng_y_tr_c"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary" />
 
@@ -76,7 +76,7 @@
                     android:id="@+id/tvListingTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="iPhone 13 Pro Max 256GB"
+                    android:text="@string/t_n_s_n_ph_m_sample"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -88,7 +88,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="👤 nguyen_van_a"
+                    android:text="@string/ng_i_b_n"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary" />
 
@@ -107,7 +107,7 @@
                 android:id="@+id/tvOriginalPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Giá gốc: 25.000.000đ"
+                android:text="@string/gi_g_c_sample"
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary" />
 
@@ -123,7 +123,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Giá đề xuất: 21.000.000đ"
+                    android:text="@string/gi_xu_t_sample"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorPrimary" />
@@ -132,7 +132,7 @@
                     android:id="@+id/tvDiscount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="-16%"
+                    android:text="@string/_15"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/success_color"
@@ -148,7 +148,7 @@
             android:id="@+id/tvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💬 Tôi rất thích sản phẩm này. Bạn có thể giảm giá không?"
+            android:text="@string/my_offer_message_sample"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="12dp"
@@ -159,7 +159,7 @@
             android:id="@+id/btnViewDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Xem chi tiết"
+            android:text="@string/xem_chi_ti_t"
             android:backgroundTint="@color/colorPrimary"
             android:textColor="@android:color/white"
             android:layout_gravity="end" />

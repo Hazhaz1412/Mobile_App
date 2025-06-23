@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Xác thực email"
+        android:text="@string/x_c_th_c_email"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@android:color/black"
@@ -19,7 +19,7 @@
         android:id="@+id/tvVerificationMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chúng tôi đã gửi mã xác thực đến email của bạn. Vui lòng nhập mã để tiếp tục."
+        android:text="@string/ch_ng_t_i_g_i_m_x_c_th_c_n_email_c_a_b_n_vui_l_ng_nh_p_m_ti_p_t_c"
         android:textSize="14sp"
         android:textColor="@android:color/darker_gray"
         android:gravity="center"
@@ -28,7 +28,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nhập mã xác thực (6 chữ số)"
+        android:hint="@string/nh_p_m_x_c_th_c_6_ch_s"
         android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -54,7 +54,7 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gửi lại mã"
+            android:text="@string/g_i_l_i_m"
             android:textColor="@color/primary_color"
             android:layout_marginEnd="8dp" />
 
@@ -63,14 +63,14 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hủy"
+            android:text="@string/h_y"
             android:layout_marginEnd="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnVerify"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Xác thực"
+            android:text="@string/x_c_th_c"
             android:backgroundTint="@color/primary_color" />
 
     </LinearLayout>

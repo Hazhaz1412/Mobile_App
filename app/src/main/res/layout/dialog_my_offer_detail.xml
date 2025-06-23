@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Chi tiết yêu cầu"
+            android:text="@string/chi_ti_t_y_u_c_u"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@android:color/white" />
@@ -30,8 +30,8 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/close"
-            android:tint="@android:color/white"
-            android:contentDescription="Đóng" />
+            android:contentDescription="@string/ng1"
+            app:tint="@android:color/white" />
 
     </LinearLayout>
 
@@ -65,7 +65,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="⏳ Chờ phản hồi từ người bán"
+                    android:text="@string/ch_ph_n_h_i_t_ng_i_b_n"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/warning_color" />
@@ -99,7 +99,7 @@
                         android:id="@+id/tvProductTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="iPhone 13 Pro Max 256GB"
+                        android:text="@string/iphone_13_pro_max_256gb"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
@@ -109,7 +109,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Người bán: nguyen_van_a"
+                        android:text="@string/ng_i_b_n_nguyen_van_a"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -130,7 +130,7 @@
                     android:id="@+id/tvOriginalPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Giá gốc: 25.000.000đ"
+                    android:text="@string/gi_g_c_25_000_000"
                     android:textSize="16sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="8dp" />
@@ -139,7 +139,7 @@
                     android:id="@+id/tvOfferAmount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Giá đề xuất: 21.000.000đ"
+                    android:text="@string/gi_xu_t_21_000_000"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorPrimary"
@@ -149,7 +149,7 @@
                     android:id="@+id/tvDiscount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Giảm 16%"
+                    android:text="@string/gi_m_16"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/success_color"
@@ -163,7 +163,7 @@
                 android:id="@+id/tvMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tin nhắn: Tôi rất thích sản phẩm này. Bạn có thể giảm giá không?"
+                android:text="@string/tin_nh_n_t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_gi_kh_ng"
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="16dp"
@@ -181,7 +181,7 @@
                     android:id="@+id/tvCreatedAt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ngày tạo: 2025-06-17 14:30"
+                    android:text="@string/ng_y_t_o_2025_06_17_14_30"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
@@ -190,7 +190,7 @@
                     android:id="@+id/tvUpdatedAt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Cập nhật: 2025-06-19 10:15"
+                    android:text="@string/c_p_nh_t_2025_06_19_10_15"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary" />
 
@@ -209,7 +209,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:text="MUA NGAY"
+                    android:text="@string/mua_ngay"
                     android:backgroundTint="@color/success_color"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
@@ -229,7 +229,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
-                        android:text="Rút lại"
+                        android:text="@string/r_t_l_i"
                         android:backgroundTint="@color/error_color"
                         android:textColor="@android:color/white"
                         style="@style/Widget.MaterialComponents.Button" />
@@ -240,7 +240,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
-                        android:text="Xem sản phẩm"
+                        android:text="@string/xem_s_n_ph_m"
                         android:backgroundTint="@color/colorPrimary"
                         android:textColor="@android:color/white"
                         style="@style/Widget.MaterialComponents.Button" />

@@ -32,7 +32,7 @@
                 android:id="@+id/tv_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tên sản phẩm"
+                android:text="@string/t_n_s_n_ph_m"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:maxLines="2"
@@ -47,7 +47,7 @@
                     android:id="@+id/tv_negotiable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💬 Có thể thương lượng"
+                    android:text="@string/nh_m_i"
                     android:textSize="11sp"
                     android:textColor="@color/success_color"
                     android:textStyle="bold"
@@ -60,7 +60,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="1,000,000 VNĐ"
+                    android:text="@string/_0_vn"
                     android:textSize="18sp"
                     android:textColor="@color/price_color"
                     android:textStyle="bold" />
@@ -71,7 +71,7 @@
                 android:id="@+id/tv_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hà Nội"
+                android:text="@string/h_n_i"
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary"
                 android:layout_marginTop="4dp"
@@ -97,7 +97,7 @@
                     android:id="@+id/tv_condition"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Như mới"
+                    android:text="@string/nh_m_i"
                     android:textSize="12sp"
                     android:background="@drawable/customgreenbutton"
                     android:padding="4dp" />
@@ -116,7 +116,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="123 lượt xem"
+                    android:text="@string/l_t_xem"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary" />
 
@@ -124,7 +124,7 @@
                     android:id="@+id/tv_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Có sẵn"
+                    android:text="@string/c_s_n"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 

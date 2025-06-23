@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mô tả chi tiết lý do báo cáo:"
+        android:text="@string/m_t_chi_ti_t_l_do_b_o_c_o"
         android:textSize="16sp"
         android:textColor="@color/black"
         android:layout_marginBottom="12dp" />
@@ -16,7 +16,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nhập lý do báo cáo..."
+        android:hint="@string/nh_p_l_do_b_o_c_o"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox">        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_custom_reason"
             android:layout_width="match_parent"
@@ -32,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Báo cáo của bạn sẽ được xem xét và xử lý trong vòng 24 giờ."
+        android:text="@string/b_o_c_o_c_a_b_n_s_c_xem_x_t_v_x_l_trong_v_ng_24_gi"
         android:textSize="12sp"
         android:textColor="@color/text_secondary" />
 

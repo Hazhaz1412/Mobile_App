@@ -23,14 +23,14 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@android:color/white"
-            android:contentDescription="Back" />
+            android:contentDescription="Back"
+            app:tint="@android:color/white" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Danh sách đã chặn"
+            android:text="@string/danh_s_ch_ch_n"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:fontFamily="sans-serif-medium"
@@ -83,13 +83,13 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:src="@drawable/ic_block"
-                android:tint="@color/colorTextSecondary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                app:tint="@color/colorTextSecondary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Không có người dùng nào bị chặn"
+                android:text="@string/kh_ng_c_ng_i_d_ng_n_o_b_ch_n"
                 android:textSize="16sp"
                 android:textColor="@color/colorTextSecondary"
                 android:gravity="center"
@@ -98,7 +98,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Danh sách người dùng đã chặn sẽ hiển thị ở đây"
+                android:text="@string/danh_s_ch_ng_i_d_ng_ch_n_s_hi_n_th_y"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextTertiary"
                 android:gravity="center" />
@@ -119,13 +119,13 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:src="@drawable/ic_error"
-                android:tint="@color/colorError"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                app:tint="@color/colorError" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Không thể tải danh sách"
+                android:text="@string/kh_ng_th_t_i_danh_s_ch"
                 android:textSize="16sp"
                 android:textColor="@color/colorError"
                 android:gravity="center"
@@ -135,7 +135,7 @@
                 android:id="@+id/btnRetry"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thử lại"
+                android:text="@string/th_l_i"
                 android:textColor="@android:color/white"
                 android:background="@color/colorPrimary"
                 android:paddingLeft="24dp"

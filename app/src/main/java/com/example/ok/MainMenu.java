@@ -41,11 +41,10 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
         Log.d("MainMenu", "btnCart: " + (btnCart != null));
         Log.d("MainMenu", "btnChat: " + (btnChat != null));
         Log.d("MainMenu", "btnUser: " + (btnUser != null));
-    }private void setupClickListeners() {
-        // Trang chủ button
+    }private void setupClickListeners() {        // Trang chủ button
         if (btnDashboard != null) {
             btnDashboard.setOnClickListener(v -> {
-                Log.d("MainMenu", "🔥 Trang chủ clicked!");
+                Log.d("MainMenu", getString(R.string.log_home_clicked));
                 try {
                     HomeFragment homeFragment = new HomeFragment();
                     getSupportFragmentManager()
@@ -53,9 +52,9 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                             .replace(R.id.fragment_container, homeFragment)
                             .commit();
                     setSelectedButton(btnDashboard);
-                    Log.d("MainMenu", "✅ Home fragment loaded");
+                    Log.d("MainMenu", getString(R.string.success_home_fragment_loaded));
                 } catch (Exception e) {
-                    Log.e("MainMenu", "❌ Error loading home fragment", e);
+                    Log.e("MainMenu", getString(R.string.log_error_loading_fragment), e);
                 }
             });
         } else {
@@ -66,10 +65,8 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
         if (btnCart != null) {
             btnCart.setOnClickListener(v -> {
                 SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                long userId = prefs.getLong("userId", 0L);
-
-                if (userId == 0L) {
-                    Toast.makeText(this, "Bạn cần đăng nhập để xem tin đăng", Toast.LENGTH_SHORT).show();
+                long userId = prefs.getLong("userId", 0L);                if (userId == 0L) {
+                    Toast.makeText(this, getString(R.string.error_login_required_listings), Toast.LENGTH_SHORT).show();
                     // Navigate to login or show login dialog
                 } else {
                     loadFragment(new MyListingsFragment());
@@ -87,10 +84,8 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
         if (btnUser != null) {
             btnUser.setOnClickListener(v -> {
                 SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                long userId = prefs.getLong("userId", 0L);
-
-                if (userId == 0L) {
-                    Toast.makeText(this, "Bạn cần đăng nhập để xem hồ sơ", Toast.LENGTH_SHORT).show();
+                long userId = prefs.getLong("userId", 0L);                if (userId == 0L) {
+                    Toast.makeText(this, getString(R.string.error_login_required_profile), Toast.LENGTH_SHORT).show();
                     // Navigate to login
                 } else {
                     UserFragment fragment = UserFragment.newInstance(userId, true);
@@ -114,15 +109,15 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
         if (btnChat != null) btnChat.setBackgroundResource(R.drawable.customwhitebutton);
         if (btnUser != null) btnUser.setBackgroundResource(R.drawable.customwhitebutton);
     }public void loadFragment(Fragment fragment) {
-        Log.d("MainMenu", "🔄 Loading fragment: " + fragment.getClass().getSimpleName());
+        Log.d("MainMenu", getString(R.string.log_loading_fragment, fragment.getClass().getSimpleName()));
         try {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .commitAllowingStateLoss(); // Thay đổi này để tránh IllegalStateException
-            Log.d("MainMenu", "✅ Fragment loaded successfully");
+            Log.d("MainMenu", getString(R.string.success_fragment_loaded));
         } catch (Exception e) {
-            Log.e("MainMenu", "❌ Error loading fragment", e);
+            Log.e("MainMenu", getString(R.string.log_error_loading_fragment), e);
         }
     }
 
@@ -160,9 +155,8 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                 long userId = prefs.getLong("userId", 0L);
                 if (userId > 0) {
                     fragment = UserFragment.newInstance(userId, true);
-                    button = btnUser;
-                } else {
-                    Toast.makeText(this, "Bạn cần đăng nhập để xem hồ sơ", Toast.LENGTH_SHORT).show();
+                    button = btnUser;                } else {
+                    Toast.makeText(this, getString(R.string.error_login_required_profile), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 break;
@@ -204,15 +198,13 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                 ChatFragment chatFragment = ChatFragment.newInstance(roomId, myId, otherId, otherName);
                 loadFragment(chatFragment);
                 setSelectedButton(btnChat);
-                
-                Log.d("MainMenu", "✅ Opened chat from notification: roomId=" + roomId + 
-                                ", other=" + otherName);
+                  Log.d("MainMenu", getString(R.string.log_opened_chat_notification, roomId, otherName));
                 
                 // Clear the intent to prevent re-opening on orientation change
                 intent.removeExtra("open_chat");
                 return true;
             } else {
-                Log.w("MainMenu", "❌ Invalid chat parameters in notification intent");
+                Log.w("MainMenu", getString(R.string.log_invalid_chat_params));
             }
         }
         
@@ -224,11 +216,10 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
             String otherName = intent.getStringExtra("otherName");
             
             if (roomId != -1 && myId != -1 && otherId != -1) {
-                ChatFragment chatFragment = ChatFragment.newInstance(roomId, myId, otherId, otherName);
-                loadFragment(chatFragment);
+                ChatFragment chatFragment = ChatFragment.newInstance(roomId, myId, otherId, otherName);                loadFragment(chatFragment);
                 setSelectedButton(btnChat);
                 
-                Log.d("MainMenu", "✅ Opened chat from legacy notification: roomId=" + roomId);
+                Log.d("MainMenu", getString(R.string.log_opened_chat_legacy, roomId));
                 
                 // Clear the intent
                 intent.removeExtra("openChat");
@@ -241,11 +232,10 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
             long listingId = intent.getLongExtra("listing_id", -1);
             if (listingId != -1) {
                 // Open specific listing
-                ListingDetailFragment fragment = ListingDetailFragment.newInstance(listingId);
-                loadFragment(fragment);
+                ListingDetailFragment fragment = ListingDetailFragment.newInstance(listingId);                loadFragment(fragment);
                 setSelectedButton(btnDashboard);
                 
-                Log.d("MainMenu", "✅ Opened listing from notification: " + listingId);
+                Log.d("MainMenu", getString(R.string.log_opened_listing_notification, listingId));
                 intent.removeExtra("open_listing");
                 return true;
             }
@@ -273,12 +263,11 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .addToBackStack("OtherUserProfile")
-                    .commit();
-                    
-            Log.d("MainMenu", "Navigated to other user profile: " + displayName + " (ID: " + userId + ")");
+                    .commit();                    
+            Log.d("MainMenu", getString(R.string.success_navigated_to_other_profile, displayName, userId));
         } catch (Exception e) {
             Log.e("MainMenu", "Error navigating to other user profile", e);
-            Toast.makeText(this, "Không thể mở profile người dùng", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_cannot_open_user_profile), Toast.LENGTH_SHORT).show();
         }
     }
       /**
@@ -292,12 +281,11 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .addToBackStack("OfferManagement")
-                    .commit();
-                    
-            Log.d("MainMenu", "Navigated to offer management");
+                    .commit();                    
+            Log.d("MainMenu", getString(R.string.success_navigated_to_offer_management));
         } catch (Exception e) {
             Log.e("MainMenu", "Error navigating to offer management", e);
-            Toast.makeText(this, "Không thể mở quản lý yêu cầu giảm giá", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_cannot_open_offer_management), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -312,12 +300,11 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .addToBackStack("MyOffers")
-                    .commit();
-                    
-            Log.d("MainMenu", "Navigated to my offers");
+                    .commit();                    
+            Log.d("MainMenu", getString(R.string.success_navigated_to_my_offers));
         } catch (Exception e) {
             Log.e("MainMenu", "Error navigating to my offers", e);
-            Toast.makeText(this, "Không thể mở yêu cầu của tôi", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_cannot_open_my_offers), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -332,12 +319,11 @@ public class MainMenu extends AppCompatActivity {    private AppCompatButton btn
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .addToBackStack("Favorites")
-                    .commit();
-                    
-            Log.d("MainMenu", "Navigated to favorites");
+                    .commit();                    
+            Log.d("MainMenu", getString(R.string.success_navigated_to_favorites));
         } catch (Exception e) {
             Log.e("MainMenu", "Error navigating to favorites", e);
-            Toast.makeText(this, "Không thể mở danh sách yêu thích", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_cannot_open_favorites), Toast.LENGTH_SHORT).show();
         }
     }
 }

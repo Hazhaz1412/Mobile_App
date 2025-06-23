@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🤝 Chi tiết yêu cầu giảm giá"
+            android:text="@string/chi_ti_t_y_u_c_u_gi_m_gi"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -26,7 +26,7 @@
             android:id="@+id/tvStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="⏳ Chờ phản hồi của bạn"
+            android:text="@string/ch_ph_n_h_i_c_a_b_n"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/warning_color"
@@ -70,7 +70,7 @@
                     android:id="@+id/tvListingTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="iPhone 13 Pro Max 256GB"
+                    android:text="@string/iphone_13_pro_max_256gb1"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -81,7 +81,7 @@
                     android:id="@+id/tvBuyerName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="👤 nguyen_van_a"
+                    android:text="@string/nva1"
                     android:textSize="16sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="8dp" />
@@ -90,7 +90,7 @@
                     android:id="@+id/tvCreatedAt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Đã gửi: 2 giờ trước"
+                    android:text="@string/g_i_2_gi_tr_c"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="4dp" />
@@ -116,7 +116,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="💰 So sánh giá"
+                    android:text="@string/so_s_nh_gi"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -137,7 +137,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Giá bán"
+                            android:text="@string/gi_b_n"
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary" />
 
@@ -154,7 +154,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="→"
+                        android:text="@string/arr"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary"
                         android:layout_marginHorizontal="16dp" />
@@ -168,7 +168,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Giá đề nghị"
+                            android:text="@string/gi_ngh"
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary" />
 
@@ -176,7 +176,7 @@
                             android:id="@+id/tvOfferAmount"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="21.250.000₫"
+                            android:text="@string/_21_250_000"
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="@color/colorPrimary" />
@@ -187,7 +187,7 @@
                         android:id="@+id/tvDiscount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-15%"
+                        android:text="@string/_151"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/success_color"
@@ -218,7 +218,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="💬 Tin nhắn từ người mua"
+                    android:text="@string/tin_nh_n_t_ng_i_mua"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -228,7 +228,7 @@
                     android:id="@+id/tvMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tôi rất thích sản phẩm này. Bạn có thể giảm 15% không? Tôi sẽ mua ngay!"
+                    android:text="@string/t_i_r_t_th_ch_s_n_ph_m_n_y_b_n_c_th_gi_m_15_kh_ng_t_i_s_mua_ngay"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary"
                     android:background="@drawable/message_background_light"
@@ -249,7 +249,7 @@
                 android:id="@+id/tilCounterAmount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Giá trả lại (VND)"
+                android:hint="@string/gi_tr_l_i_vnd"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="12dp">
 
@@ -267,7 +267,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Tin nhắn phản hồi (tuỳ chọn)"
+                android:hint="@string/tin_nh_n_ph_n_h_i_tu_ch_n"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="16dp">
 
@@ -294,7 +294,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="❌ Từ chối"
+                    android:text="@string/t_ch_i"
                     android:textColor="@android:color/white"
                     android:backgroundTint="@color/error_color"
                     app:cornerRadius="12dp"
@@ -305,7 +305,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="↩️ Trả giá"
+                    android:text="@string/tr_gi"
                     android:textColor="@android:color/white"
                     android:backgroundTint="@color/info_color"
                     app:cornerRadius="12dp"
@@ -316,7 +316,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="✅ Chấp nhận"
+                    android:text="@string/ch_p_nh_n"
                     android:textColor="@android:color/white"
                     android:backgroundTint="@color/success_color"
                     app:cornerRadius="12dp"

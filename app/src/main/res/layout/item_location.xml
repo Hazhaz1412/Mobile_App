@@ -14,7 +14,7 @@
         android:drawablePadding="8dp"
         android:paddingHorizontal="8dp"
         android:paddingVertical="8dp"
-        android:text="Địa điểm"
+        android:text="@string/a_i_m"
         android:textColor="@color/text_primary"
         android:textSize="16sp" />
 

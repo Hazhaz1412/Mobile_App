@@ -181,7 +181,6 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         setupListeners();
         initChatRoom();
     }
-      // 🔥 FIX: Thêm lifecycle methods để quản lý background polling    @Override
     public void onResume() {
         super.onResume();
         isFragmentVisible = true;
@@ -322,20 +321,33 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
                 }
             });
         } else {
-            Log.w(TAG, "⚠️ btnTestNotification not found in layout, using alternative test method");
-        }
+            Log.w(TAG, "⚠️ btnTestNotification not found in layout, using alternative test method");        }
         
         // Send button
-        btnSend.setOnClickListener(v -> sendMessage());
+        if (btnSend != null) {
+            btnSend.setOnClickListener(v -> sendMessage());
+        } else {
+            Log.w(TAG, "⚠️ btnSend not found in layout");
+        }        // Attachment button
+        if (btnAttachment != null) {
+            btnAttachment.setOnClickListener(v -> showAttachmentOptions());
+        } else {
+            Log.w(TAG, "⚠️ btnAttachment not found in layout");
+        }
         
-        // Attachment button
-        btnAttachment.setOnClickListener(v -> showAttachmentOptions());
-        
-        // Back to listing button
-        btnViewListing.setOnClickListener(v -> navigateToListing());
+        // Back to listing button (with null check)
+        if (btnViewListing != null) {
+            btnViewListing.setOnClickListener(v -> navigateToListing());
+        } else {
+            Log.w(TAG, "⚠️ btnViewListing not found in layout");
+        }
         
         // Pull to refresh
-        swipeRefresh.setOnRefreshListener(this::loadMoreMessages);        // **ENHANCED: Add test notification with better debug info**
+        if (swipeRefresh != null) {
+            swipeRefresh.setOnRefreshListener(this::loadMoreMessages);
+        } else {
+            Log.w(TAG, "⚠️ swipeRefresh not found in layout");
+        }// **ENHANCED: Add test notification with better debug info**
         tvOtherUserName.setOnClickListener(v -> {
             Log.d(TAG, "=== USER NAME CLICKED - TEST NOTIFICATION ===");
             Log.d(TAG, "Other user name: " + otherName);
@@ -854,10 +866,9 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             intent.setType("image/*");
             Log.d(TAG, "Starting gallery intent with REQUEST_SELECT_IMAGE (" + REQUEST_SELECT_IMAGE + ")");
-            startActivityForResult(intent, REQUEST_SELECT_IMAGE);
-        } catch (Exception e) {
+            startActivityForResult(intent, REQUEST_SELECT_IMAGE);        } catch (Exception e) {
             Log.e(TAG, "Error starting gallery intent", e);
-            Toast.makeText(getContext(), "Không thể mở thư viện ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.error_cannot_open_gallery, e.getMessage()), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -866,10 +877,10 @@ public class ChatFragment extends Fragment implements ChatAdapter.OnMessageActio
         try {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             Log.d(TAG, "Starting camera intent with REQUEST_TAKE_PHOTO (" + REQUEST_TAKE_PHOTO + ")");
-            startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-        } catch (Exception e) {
+            startActivityForResult(intent, REQUEST_TAKE_PHOTO);        } catch (Exception e) {
             Log.e(TAG, "Error starting camera intent", e);
-            Toast.makeText(getContext(), "Không thể mở camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();        }
+            Toast.makeText(getContext(), getString(R.string.error_cannot_open_camera, e.getMessage()), Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void sendImageMessage(Uri imageUri) {

@@ -9,7 +9,7 @@
         android:id="@+id/tvListingPrice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Giá hiện tại: 0 VNĐ"
+        android:text="@string/gi_hi_n_t_i_0_vn"
         android:textStyle="bold"
         android:textSize="16sp"
         android:layout_marginBottom="16dp" />
@@ -18,7 +18,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tùy chọn nhanh:"
+        android:text="@string/t_y_ch_n_nhanh"
         android:textStyle="bold"
         android:textSize="14sp"
         android:layout_marginBottom="8dp" />
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
-            android:text="-5%"
+            android:text="@string/_5"
             android:textSize="12sp" />
 
         <Button
@@ -47,7 +47,7 @@
             android:layout_weight="1"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
-            android:text="-10%"
+            android:text="@string/_10"
             android:textSize="12sp" />
 
         <Button
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="4dp"
-            android:text="-15%"
+            android:text="@string/_15"
             android:textSize="12sp" />
 
     </LinearLayout>
@@ -65,7 +65,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Hoặc nhập giá mong muốn (VNĐ)"
+        android:hint="@string/ho_c_nh_p_gi_mong_mu_n_vn"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -80,7 +80,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Lý do yêu cầu giảm giá (tùy chọn)"
+        android:hint="@string/l_do_y_u_c_u_gi_m_gi_t_y_ch_n"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -96,7 +96,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="💡 Mẹo: Đưa ra lý do hợp lý sẽ tăng khả năng người bán chấp nhận yêu cầu của bạn."
+        android:text="@string/m_o_a_ra_l_do_h_p_l_s_t_ng_kh_n_ng_ng_i_b_n_ch_p_nh_n_y_u_c_u_c_a_b_n"
         android:textSize="12sp"
         android:textColor="#666666"
         android:layout_marginTop="16dp"

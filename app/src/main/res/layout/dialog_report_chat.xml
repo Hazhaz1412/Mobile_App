@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lý do báo cáo:"
+        android:text="@string/l_do_b_o_c_o"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="12dp" />
@@ -29,7 +29,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mô tả chi tiết (tùy chọn):"
+        android:text="@string/m_t_chi_ti_t_t_y_ch_n"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
@@ -42,7 +42,7 @@
         android:minLines="3"
         android:maxLines="5"
         android:gravity="top"
-        android:hint="Mô tả về hành vi không phù hợp trong cuộc trò chuyện"
+        android:hint="@string/m_t_v_h_nh_vi_kh_ng_ph_h_p_trong_cu_c_tr_chuy_n"
         android:inputType="textMultiLine|textCapSentences"
         android:background="@drawable/edittext_background"
         android:padding="12dp" />
@@ -50,7 +50,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="⚠️ Báo cáo sai có thể ảnh hưởng đến uy tín của bạn."
+        android:text="@string/b_o_c_o_sai_c_th_nh_h_ng_n_uy_t_n_c_a_b_n"
         android:textSize="12sp"
         android:textColor="@color/colorWarning"
         android:layout_marginTop="12dp" />

@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lọc theo giá"
+        android:text="@string/l_c_theo_gi"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -36,7 +36,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="0đ"
+            android:text="@string/_01"
             android:textSize="14sp"
             android:textColor="@color/primary_color"
             android:textStyle="bold" />
@@ -45,7 +45,7 @@
             android:id="@+id/tvMaxPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="10 triệu đ"
+            android:text="@string/_10_tri_u1"
             android:textSize="14sp"
             android:textColor="@color/primary_color"
             android:textStyle="bold" />
@@ -62,7 +62,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Đặt lại"
+            android:text="@string/t_l_i1"
             android:layout_marginEnd="8dp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
@@ -71,7 +71,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Áp dụng"
+            android:text="@string/p_d_ng1"
             android:layout_marginStart="8dp"
             android:backgroundTint="@color/primary_color"
             android:textColor="@color/white" />

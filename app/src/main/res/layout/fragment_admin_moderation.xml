@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🛡️ Quản lý Báo cáo"
+        android:text="@string/qu_n_l_b_o_c_o"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center"
@@ -32,7 +32,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Trạng thái:"
+                android:text="@string/tr_ng_th_i1"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -54,7 +54,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Loại báo cáo:"
+                android:text="@string/lo_i_b_o_c_o"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -73,7 +73,7 @@
         android:id="@+id/btn_refresh"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🔄 Làm mới"
+        android:text="@string/l_m_m_i1"
         android:background="@drawable/button_background"
         android:textColor="@android:color/white"
         android:layout_marginBottom="16dp" />
